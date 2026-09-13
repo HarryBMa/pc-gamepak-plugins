@@ -1,0 +1,12 @@
+Id: PCGamePak
+Name: PC GamePak Shelf
+Author: Harry Malmgren
+Version: 0.1
+Module: GamePakShelf.dll
+Type: GenericPlugin
+Icon: icon.png
+Links:
+  - Name: PC GamePak
+    Url: https://github.com/HarryBMa/pc-gamepak
+  - Name: Source
+    Url: https://github.com/HarryBMa/pc-gamepak-plugins
