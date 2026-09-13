@@ -1,0 +1,11 @@
+{
+  "name": "PC GamePak",
+  "platform": "generic",
+  "guid": "2b51478d-d422-49f2-b99b-1ce99b3b01b7",
+  "version": "0.1.0",
+  "description": "Games on PC GamePak cartridges: owned once seen, installed while the cartridge is plugged in.",
+  "author": "Harry Malmgren",
+  "email": "",
+  "url": "https://github.com/HarryBMa/pc-gamepak-plugins",
+  "script": "plugin.py"
+}
