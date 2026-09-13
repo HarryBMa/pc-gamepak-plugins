@@ -1,6 +1,6 @@
 # pc-gamepak-sync — Heroic, Pegasus and ES-DE
 
-![Status](https://img.shields.io/badge/status-tested%20against%20file%20formats-yellow)
+![Status](https://img.shields.io/badge/status-tested%20in%20all%20three%20apps-brightgreen)
 [![Release](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=sync-v*&display_name=tag&label=release)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=sync-v)
 
 Three front-ends that read files instead of loading plugins, kept in step with
@@ -19,10 +19,17 @@ Every game is started through the launcher — `pc-gamepak --drive <root> --play
 with the cartridge exactly as they do from the launcher's window. That needs a
 PC GamePak new enough to have `--play`.
 
-> **Status:** tested against each front-end's documented file format, with
-> fixtures, on Windows and Linux in CI. **Not yet run against the real
-> applications.** Heroic, Pegasus and ES-DE all read these files at start, so a
-> cartridge plugged in while one is running shows up on its next start.
+> **Status:** tested on Windows against a real cartridge in Heroic 2.22.1,
+> Pegasus alpha16 and ES-DE 3.4.1 — each lists the game, and Play starts it
+> through the launcher. Also tested against each file format on Windows and
+> Linux in CI.
+
+**All three read these files at start.** The sync tool updates them within two
+seconds of a cartridge coming or going, but a front-end that is already open
+keeps showing what it read — Heroic says so in its own log: "refresh not
+implemented on Sideload Library Manager". Restart it to see the change. Until
+then, pressing Play on a game whose cartridge has been pulled says to plug the
+cartridge in, because every launch script checks before it asks the launcher.
 
 ## Switching front-ends on
 

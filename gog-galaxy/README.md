@@ -1,6 +1,6 @@
 # PC GamePak for GOG Galaxy
 
-![Status](https://img.shields.io/badge/status-tested%20against%20the%20Galaxy%20API-yellow)
+![Status](https://img.shields.io/badge/status-tested%20in%20the%20Galaxy%20client-brightgreen)
 [![Release](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=galaxy-v*&display_name=tag&label=release)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=galaxy-v)
 
 PC GamePak cartridges as a GOG Galaxy 2.0 integration.
@@ -14,13 +14,22 @@ PC GamePak cartridges as a GOG Galaxy 2.0 integration.
   until the launcher exits — which is when the game does.
 - Nothing to log in to: the integration connects with a local account.
 
-It uses Galaxy's `generic` platform, and needs PC GamePak installed, new enough
-to have `--play`.
+It needs PC GamePak installed, new enough to have `--play`.
 
-> **Status:** tested with the real `galaxy.plugin.api` 0.71 — owned and local
-> games, launch, running-until-exit and unplugging — and the packaged release
-> loads under GOG Galaxy's own embedded Python and finds a real cartridge.
-> **Not yet connected inside the Galaxy client.**
+It registers as Galaxy's **Kartridge** platform. Galaxy has no custom platform:
+the API defines `generic`, but the client refuses it ("Platform generic given in
+plugin manifest ... is not allowed"), and Kartridge — Kongregate's store, closed
+in 2021 — is one no live integration will be claiming. So PC GamePak's games
+carry the Kartridge label and icon in Galaxy.
+
+> **Status:** tested in the GOG Galaxy client against a real cartridge. It
+> connects, FTL appears owned and installed, Play starts it through the launcher
+> and shows Running until the game exits, and pulling the cartridge greys the
+> game out and plugging it back in lights it up again. Also tested with the real
+> `galaxy.plugin.api` 0.71 in CI.
+>
+> Galaxy uploads ownership to your GOG account as it does for any integration,
+> so the games also appear in Galaxy on your other machines.
 
 ## Switching it on
 

@@ -14,9 +14,32 @@ look.
 |---|---|---|---|---|
 | [`decky/`](decky/) | Steam Deck, through Decky Loader | A Deck Shelves shelf source and a Quick Access list | [![Decky](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=decky-v*&display_name=tag&label=decky)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=decky-v) | ![Status](https://img.shields.io/badge/run%20on%20a%20Deck-shelf%20%26%20panel%20work-green) |
 | [`playnite/`](playnite/) | Playnite, on Windows | The first tile in the library; Play through the launcher with no window, Eject on its menu | [![Playnite](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=playnite-v*&display_name=tag&label=playnite)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=playnite-v) | ![Status](https://img.shields.io/badge/run%20end%20to%20end-real%20cartridge-brightgreen) |
-| [`gog-galaxy/`](gog-galaxy/) | GOG Galaxy 2.0 | Owned games, installed while the cartridge is in | [![Galaxy](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=galaxy-v*&display_name=tag&label=galaxy)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=galaxy-v) | ![Status](https://img.shields.io/badge/tested-Galaxy%20API%2C%20not%20client-yellow) |
-| [`sync/`](sync/) | Heroic, Pegasus, ES-DE | Sideloaded games / a collection / a system, while the cartridge is in | [![Sync](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=sync-v*&display_name=tag&label=sync)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=sync-v) | ![Status](https://img.shields.io/badge/tested-file%20formats%2C%20not%20apps-yellow) |
+| [`gog-galaxy/`](gog-galaxy/) | GOG Galaxy 2.0 | Owned games, installed while the cartridge is in | [![Galaxy](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=galaxy-v*&display_name=tag&label=galaxy)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=galaxy-v) | ![Status](https://img.shields.io/badge/tested-in%20the%20Galaxy%20client-brightgreen) |
+| [`sync/`](sync/) | Heroic, Pegasus, ES-DE | Sideloaded games / a collection / a system, while the cartridge is in | [![Sync](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=sync-v*&display_name=tag&label=sync)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=sync-v) | ![Status](https://img.shields.io/badge/tested-in%20all%20three%20apps-brightgreen) |
 | [`launchbox/`](launchbox/) | LaunchBox / Big Box | A cartridge slot, as in Playnite | — | ![Status](https://img.shields.io/badge/status-design%20only-lightgrey) |
+
+## What works
+
+Tested against a real cartridge — FTL, a Steam game — in each application.
+
+| Front-end | Plays a cartridge | Notices insert and removal while running | Eject from inside it | Reads cartridges |
+|---|---|---|---|---|
+| **Playnite** | ✅ through the launcher, timed by Playnite | ✅ within two seconds; the slot fills and empties | ✅ on the slot's menu | Live |
+| **GOG Galaxy** | ✅ through the launcher; shows Running until the game exits | ✅ within two seconds; games grey out and come back | — | Live |
+| **Decky** (Steam Deck) | ✅ handed to Steam as a URI | ✅ within two seconds | — | Live |
+| **Heroic** | ✅ through the launcher | ❌ `pc-gamepak-sync` updates its library within two seconds, but Heroic only reads it at start | — | At start |
+| **Pegasus** | ✅ through the launcher | ❌ updated live on disk, read at start | — | At start |
+| **ES-DE** | ✅ through the launcher | ❌ updated live on disk, read at start | — | At start |
+| **LaunchBox** | Not built | — | — | — |
+
+"At start" means a cartridge plugged in or pulled while the front-end is open
+shows up, or goes, the next time it starts. Until then a pulled cartridge's
+game stays on screen, and pressing Play on it says to plug the cartridge in
+rather than doing nothing. Eject anywhere else is the launcher's own, or
+Windows's.
+
+Decky is the one that plays without the launcher: Steam starts the game, so
+the cartridge counts the launch but not the hours.
 
 Each folder has its own build, tests and README. The Python ones —
 `gog-galaxy/` and `sync/` — share [`common/gamepak`](common/gamepak): one
