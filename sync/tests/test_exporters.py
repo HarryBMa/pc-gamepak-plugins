@@ -59,6 +59,23 @@ class SharedTests(Fixture):
         self.assertIn("exec ", posix)
         self.assertIn("'--play' '2'", posix)
 
+    def test_a_title_cannot_run_a_command_from_a_script_comment(self):
+        evil = shared.Entry(read_cartridge(self.cart), self.entries[0].game)
+        evil.game.title = 'FTL & calc.exe | del /q C:\\ ^ > x'
+        windows = shared.script_text(self.launcher, evil, windows=True)
+        comment = [line for line in windows.split("\r\n") if line.startswith("rem ")][0]
+        for bad in "&|^<>\\":
+            self.assertNotIn(bad, comment)
+        self.assertIn("FTL", comment)
+
+    def test_a_script_checks_the_cartridge_is_there_first(self):
+        alpha = self.entries[0]
+        windows = shared.script_text(self.launcher, alpha, windows=True)
+        self.assertLess(windows.index("if not exist"), windows.index("--play"))
+        self.assertIn("exit /b 1", windows)
+        posix = shared.script_text(self.launcher, alpha, windows=False)
+        self.assertLess(posix.index("if [ ! -f"), posix.index("exec "))
+
     def test_scripts_for_games_that_left_are_removed(self):
         directory = self.base / "scripts"
         shared.write_scripts(directory, self.launcher, self.entries)

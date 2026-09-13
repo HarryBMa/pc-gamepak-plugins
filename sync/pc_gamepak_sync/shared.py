@@ -54,13 +54,52 @@ def script_suffix(windows: Optional[bool] = None) -> str:
     return ".cmd" if (os.name == "nt" if windows is None else windows) else ".sh"
 
 
+def comment_safe(text: str) -> str:
+    """A title fit to sit in a script comment.
+
+    The title comes off a cartridge somebody may have handed you. In a .cmd
+    file `rem FTL & calc` runs calc: `&`, `|`, `<`, `>` and `^` end a `rem`
+    line early. Anything but plain printable text is dropped rather than
+    escaped, because it is only ever a label for a person reading the file.
+    """
+    return re.sub(r"[^A-Za-z0-9 .,:;'!?()\[\]_+-]", "", text)[:80]
+
+
 def script_text(launcher: Path, entry: Entry, windows: Optional[bool] = None) -> str:
+    """A launch script for one game.
+
+    It checks the cartridge is there before asking the launcher to play it.
+    Heroic, Pegasus and ES-DE all read their lists at start, so a game can stay
+    on screen after its cartridge has gone, until the front-end restarts; Play
+    on it then says to plug the cartridge in rather than doing nothing.
+    """
     windows = os.name == "nt" if windows is None else windows
-    args = install.play_args(launcher, entry.cartridge.root, entry.game.index)
+    root = entry.cartridge.root
+    args = install.play_args(launcher, root, entry.game.index)
     line = install.command_line(args, windows=windows)
+    label = comment_safe(entry.title)
+    conf = str(root / "cartridge.conf")
+    message = "Plug in the cartridge for %s, then press Play again." % label
     if windows:
-        return "@echo off\r\nrem %s\r\n%s\r\n" % (entry.title, line)
-    return "#!/bin/sh\n# %s\nexec %s\n" % (entry.title.replace("\n", " "), line)
+        return (
+            "@echo off\r\n"
+            "rem %s\r\n"
+            "if not exist %s (\r\n"
+            "  powershell -NoProfile -WindowStyle Hidden -Command \"Add-Type -AssemblyName PresentationFramework; "
+            "[System.Windows.MessageBox]::Show('%s', 'PC GamePak') | Out-Null\"\r\n"
+            "  exit /b 1\r\n"
+            ")\r\n"
+            "%s\r\n"
+        ) % (label, install.quote_windows(conf), message.replace("'", "''"), line)
+    return (
+        "#!/bin/sh\n"
+        "# %s\n"
+        "if [ ! -f %s ]; then\n"
+        "  notify-send 'PC GamePak' %s 2>/dev/null || echo %s >&2\n"
+        "  exit 1\n"
+        "fi\n"
+        "exec %s\n"
+    ) % (label, install.quote_posix(conf), install.quote_posix(message), install.quote_posix(message), line)
 
 
 def write_if_changed(path: Path, text: str, executable: bool = False) -> bool:
