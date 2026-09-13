@@ -1,5 +1,8 @@
 # PC GamePak for Playnite
 
+[![Release](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=playnite-v*&display_name=tag&label=release)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=playnite-v)
+[![CI](https://img.shields.io/github/actions/workflow/status/HarryBMa/pc-gamepak-plugins/ci.yml?branch=main&label=CI)](https://github.com/HarryBMa/pc-gamepak-plugins/actions/workflows/ci.yml)
+
 A cartridge slot as the first tile in Playnite's library. With no cartridge in,
 it shows an empty slot. Plug one in and the tile becomes that cartridge — its
 title, cover, background and icon. Play starts the game; right-click ejects.

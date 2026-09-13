@@ -11,7 +11,14 @@
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path $PSScriptRoot -Parent
-[void][Reflection.Assembly]::LoadFrom((Join-Path $env:LOCALAPPDATA "Playnite\Playnite.SDK.dll"))
+# Playnite's own copy when it is installed; otherwise the NuGet package the
+# project fell back to, which is the case on a CI runner.
+$sdk = @(Join-Path $env:LOCALAPPDATA "Playnite\Playnite.SDK.dll") +
+    @(Get-ChildItem (Join-Path $env:USERPROFILE ".nuget\packages\playnitesdk") -Recurse -Filter Playnite.SDK.dll -ErrorAction SilentlyContinue |
+        Sort-Object FullName -Descending | ForEach-Object FullName) |
+    Where-Object { Test-Path $_ } | Select-Object -First 1
+if (-not $sdk) { throw "Playnite.SDK.dll not found: install Playnite, or build once so NuGet restores PlayniteSDK" }
+[void][Reflection.Assembly]::LoadFrom($sdk)
 [void][Reflection.Assembly]::LoadFrom((Join-Path $root "_build\GamePakShelf.dll"))
 
 $base = Join-Path ([IO.Path]::GetTempPath()) ("gamepak-test-" + [Guid]::NewGuid().ToString("N"))
