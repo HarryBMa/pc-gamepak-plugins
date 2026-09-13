@@ -145,6 +145,29 @@ class Plugin:
                 )
         return out
 
+    async def record_launch(self, cartridge: str, executable: str, title: str = "") -> bool:
+        """Count a launch on the cartridge itself.
+
+        The only write this plugin makes that is not behind a setting, and the
+        case for it is the same as the launcher's: it happens because somebody
+        pressed a game, it goes to the drive that game is on, and it is that
+        drive's own bookkeeping. A cartridge that will not take the write keeps
+        playing without a count.
+
+        The count only — no hours. Steam is handed a URI and tells this plugin
+        nothing about what happens next, so there is no duration here that
+        would not be invented. The launcher, which stays open for the session,
+        records those.
+        """
+        for known in self._cartridges:
+            if known["id"] != cartridge:
+                continue
+            return await asyncio.to_thread(
+                cartridges.record_launch, Path(known["mount"]), executable, title
+            )
+        decky.logger.warning("no cartridge called %s is mounted", cartridge)
+        return False
+
     async def get_settings(self) -> dict[str, Any]:
         try:
             with open(self._settings_file(), encoding="utf-8") as handle:
@@ -177,6 +200,17 @@ class Plugin:
     # ---------------------------------------------------------------- lifecycle
 
     async def _refresh(self) -> None:
+        # Switched off in PC GamePak's settings means this plugin is not the
+        # front-end on this machine, so it offers nothing: no row, no shelf, no
+        # panel entries. Checked on every scan rather than at load, so turning it
+        # on in the launcher takes effect without restarting Decky.
+        if not await asyncio.to_thread(cartridges.is_enabled):
+            if self._cartridges:
+                decky.logger.info("switched off in PC GamePak settings; offering nothing")
+                self._cartridges = []
+                self._serial += 1
+            return
+
         found = await asyncio.to_thread(cartridges.scan)
 
         # Compare on identity and contents, not on the inlined art — otherwise

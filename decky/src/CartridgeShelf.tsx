@@ -15,7 +15,7 @@ const Card: FC<{ game: Game; cartridge: Cartridge }> = ({ game, cartridge }) => 
   const art = game.art.cover ?? cartridge.art.cover;
   return (
     <Focusable
-      onActivate={() => launch(game.executable)}
+      onActivate={() => launch(game.executable, cartridge.id, game.title)}
       style={{
         width: "150px",
         height: "225px",

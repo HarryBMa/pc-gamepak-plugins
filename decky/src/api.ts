@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import type { Cartridge } from "./types";
 
 const getCartridges = callable<[], Cartridge[]>("get_cartridges");
+const recordLaunch = callable<[cartridge: string, executable: string, title: string], boolean>(
+  "record_launch",
+);
 const getSerial = callable<[], number>("get_serial");
 const rescan = callable<[], Cartridge[]>("rescan");
 
@@ -72,12 +75,22 @@ export function useCartridges(): {
  * from here — that needs the host, which a Decky plugin has no business
  * reaching for, and the PC GamePak launcher already does it properly.
  */
-export function launch(executable: string): boolean {
+export function launch(executable: string, cartridge?: string, title = ""): boolean {
   if (!executable) return false;
-  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(executable)) {
-    Navigation.NavigateToExternalWeb(executable);
-    return true;
+  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(executable)) {
+    console.warn("[pc-gamepak] not a URI, cannot launch from here:", executable);
+    return false;
   }
-  console.warn("[pc-gamepak] not a URI, cannot launch from here:", executable);
-  return false;
+
+  // Counted before Steam is handed anything, and never waited on. The count
+  // going to the drive is worth having; a game that does not start because a
+  // cartridge is mounted read-only is not.
+  if (cartridge) {
+    void recordLaunch(cartridge, executable, title).catch((error) =>
+      console.warn("[pc-gamepak] could not count the launch", error),
+    );
+  }
+
+  Navigation.NavigateToExternalWeb(executable);
+  return true;
 }

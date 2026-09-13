@@ -12,6 +12,49 @@ import { CartridgeShelf } from "./CartridgeShelf";
 import { offerCartridgesToDeckShelves } from "./deckShelves";
 import * as shortcuts from "./shortcuts";
 import { useCartridges, launch } from "./api";
+import type { Game } from "./types";
+
+/**
+ * What the cartridge remembers about a game, as one line under its name.
+ *
+ * Read off the drive rather than out of Steam, which is the only reason it is
+ * worth showing: Steam already knows how long you have played on this Deck.
+ * This is the total across every machine the cartridge has been in, so
+ * "47 h · last played 2 days ago on workshop" is a sentence only the cartridge
+ * can say.
+ *
+ * A game nobody has started gets no line — "0 launches" is furniture.
+ */
+function history(game: Game): string | undefined {
+  const stats = game.stats;
+  if (!stats?.launches) return undefined;
+
+  const parts: string[] = [];
+  if ((stats.seconds ?? 0) >= 60) parts.push(duration(stats.seconds ?? 0));
+  parts.push(`${stats.launches} ${stats.launches === 1 ? "launch" : "launches"}`);
+  if (stats.lastPlayed) {
+    const where = stats.lastHost ? ` on ${stats.lastHost}` : "";
+    parts.push(`last played ${since(stats.lastPlayed)}${where}`);
+  }
+  return parts.join(" · ");
+}
+
+/** Hours and minutes. Nobody reads a playtime to the second. */
+function duration(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.round((seconds % 3600) / 60);
+  if (!hours) return `${minutes} min`;
+  return minutes ? `${hours} h ${minutes} min` : `${hours} h`;
+}
+
+/** A rough distance into the past, which is all this is read for. */
+function since(unix: number): string {
+  const days = Math.floor(Date.now() / 1000 / 86400 - unix / 86400);
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 30) return `${days} days ago`;
+  return new Date(unix * 1000).toLocaleDateString();
+}
 
 /**
  * The one setting: whether games the cartridge carries get a Steam shortcut.
@@ -85,7 +128,11 @@ const QuickAccess: FC = () => {
         <PanelSection key={cart.id} title={cart.title}>
           {cart.games.map((game) => (
             <PanelSectionRow key={game.executable}>
-              <ButtonItem layout="below" onClick={() => launch(game.executable)}>
+              <ButtonItem
+                layout="below"
+                description={history(game)}
+                onClick={() => launch(game.executable, cart.id, game.title)}
+              >
                 {game.title}
               </ButtonItem>
             </PanelSectionRow>

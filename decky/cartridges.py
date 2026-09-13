@@ -24,11 +24,18 @@ or, for more than one game:
 Art paths are relative to `cartridge.conf` and may sit in `.gamepak/`. Nothing
 outside the cartridge is ever read: a path that climbs out with `..` is refused,
 which is the same rule the launcher applies.
+
+The one file here that is also written is `.gamepak/stats.json`, the cartridge's
+own count of how often it has been played. It lives on the drive so the number
+follows the cartridge between a desktop and a Deck, which only works if both of
+them keep it.
 """
 
 from __future__ import annotations
 
+import json
 import os
+import time
 from pathlib import Path
 from typing import Any
 
@@ -43,6 +50,18 @@ ASSET_DIR = ".gamepak"
 MAX_ART_BYTES = 8 * 1024 * 1024
 
 ART_KEYS = ("cover", "background", "logo", "icon")
+
+# What the cartridge remembers about being played, written by PC GamePak's
+# launcher and read — and added to — here. The point of it living on the drive
+# rather than on the host is that a cartridge carried between a desktop and a
+# Deck keeps one count, so this plugin reading the desktop's hours is not a
+# nicety, it is the feature working.
+STATS_FILE = "stats.json"
+
+# The longest a session started here may be credited with. Matches the
+# launcher's ceiling, and for the same reason: wall clock is the only clock,
+# and a Deck left suspended would otherwise wake up and add a week.
+MAX_SESSION_SECONDS = 16 * 60 * 60
 
 
 def parse_conf(text: str) -> dict[str, Any]:
@@ -139,6 +158,171 @@ def find_default_art(root: Path) -> str | None:
     return None
 
 
+# Where PC GamePak keeps its settings, and the key that says which front-ends
+# should handle a cartridge. Read, never written: the launcher owns this file.
+#
+# The whole contract between the two projects is one boolean in one JSON file.
+# No socket, no daemon, no protocol to version — which matters because this is
+# Python inside Steam's process tree and that is Rust in a window, and anything
+# richer would be a thing to keep in step forever.
+SETTINGS_DIRS = (
+    os.path.join(
+        os.environ.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state"),
+        "pc-gamepak",
+    ),
+)
+SETTINGS_FILE = "settings.json"
+FRONTEND_ID = "decky"
+
+
+def settings_path() -> Path | None:
+    """The launcher's settings file, if it is where it should be."""
+    override = os.environ.get("PC_GAMEPAK_CONFIG_DIR")
+    roots = (override,) + SETTINGS_DIRS if override else SETTINGS_DIRS
+    for root in roots:
+        candidate = Path(root) / SETTINGS_FILE
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def is_enabled() -> bool:
+    """Whether this plugin has been made a front-end in PC GamePak's settings.
+
+    **True when there is no answer**, which is the one judgement call here. A Deck
+    with this plugin installed and PC GamePak not installed at all has no settings
+    file to read, and refusing to work until a program the user does not have says
+    it may would be absurd — the plugin is documented as needing nothing else.
+
+    So the file only ever switches it *off*, and only when it explicitly says so.
+    """
+    path = settings_path()
+    if path is None:
+        return True
+    try:
+        with open(path, encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, ValueError):
+        return True
+    frontends = data.get("frontends")
+    if not isinstance(frontends, dict):
+        return True
+    value = frontends.get(FRONTEND_ID)
+    return value if isinstance(value, bool) else True
+
+
+def stats_key(executable: str) -> str:
+    """The identity of a game, the way `.gamepak/stats.json` keys it.
+
+    Kept in step with `stats::key_for` in gamepak-core, and it has to be: a row
+    written by the launcher on Windows must be the row this finds on a Deck.
+    Separators are normalised, and case is folded for URIs only — two files on
+    a case-sensitive filesystem really can differ by case, and collapsing them
+    would merge two games into one row.
+    """
+    trimmed = executable.strip().replace("\\", "/")
+    scheme, sep, _ = trimmed.partition("://")
+    is_uri = bool(sep) and len(scheme) >= 2 and scheme[:1].isalpha() and all(
+        ch.isalnum() or ch in "+-." for ch in scheme
+    )
+    return trimmed.lower() if is_uri else trimmed
+
+
+def stats_path(root: Path) -> Path:
+    return root / ASSET_DIR / STATS_FILE
+
+
+def read_stats(root: Path) -> dict[str, dict[str, Any]]:
+    """What the cartridge has recorded, or nothing.
+
+    A missing file and an unreadable one answer the same, on purpose: this is
+    called to draw a line under a game's name, and a cartridge with no history
+    and one whose history will not parse both have nothing to show.
+    """
+    try:
+        with open(stats_path(root), encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, ValueError):
+        return {}
+    games = data.get("games")
+    return games if isinstance(games, dict) else {}
+
+
+def write_stats(root: Path, games: dict[str, Any]) -> bool:
+    """Replace the stats file, whole, or say it could not be done.
+
+    Written beside itself and renamed into place, so a cartridge pulled out
+    mid-write loses the update rather than ending up with a truncated file that
+    reads as an empty history.
+    """
+    path = stats_path(root)
+    temporary = path.with_suffix(".json.tmp")
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(temporary, "w", encoding="utf-8") as handle:
+            json.dump({"version": 1, "games": games}, handle, indent=2, sort_keys=True)
+        os.replace(temporary, path)
+        return True
+    except OSError:
+        try:
+            os.unlink(temporary)
+        except OSError:
+            pass
+        return False
+
+
+def record_launch(root: Path, executable: str, title: str = "", host: str = "") -> bool:
+    """Count a launch on the cartridge.
+
+    The count only. This plugin hands a `steam://` URI to Steam and is told
+    nothing about what happens next — not when the game starts, and not when it
+    stops — so there is no honest duration to add here. The launcher, which is
+    a window that stays open for the session, records the hours; a cartridge
+    played on a Deck gains launches and a last-played, which is the part
+    somebody actually looks for.
+
+    Returns False when the drive would not take the write. A read-only
+    cartridge is a reason not to have a count, never a reason not to play.
+    """
+    key = stats_key(executable)
+    if not key:
+        return False
+
+    games = read_stats(root)
+    entry = games.get(key)
+    if not isinstance(entry, dict):
+        entry = {}
+
+    now = int(time.time())
+    if title.strip():
+        entry["title"] = title.strip()
+    entry["launches"] = int(entry.get("launches") or 0) + 1
+    entry.setdefault("seconds", 0)
+    if not entry.get("firstPlayed"):
+        entry["firstPlayed"] = now
+    entry["lastPlayed"] = now
+    entry["lastHost"] = host or host_name()
+    games[key] = entry
+    return write_stats(root, games)
+
+
+def host_name() -> str:
+    """What to call this machine in `lastHost`.
+
+    A Deck's hostname is usually `steamdeck`, which is exactly the useful thing
+    to see next to a last-played date on a cartridge that also gets plugged
+    into a desktop.
+    """
+    for var in ("HOSTNAME", "COMPUTERNAME"):
+        value = os.environ.get(var, "").strip()
+        if value:
+            return value
+    try:
+        return Path("/etc/hostname").read_text(encoding="utf-8").strip()
+    except OSError:
+        return ""
+
+
 def read_cartridge(root: Path) -> dict[str, Any] | None:
     """Read one mounted cartridge, or None if there is not one here."""
     conf = root / CONF_NAME
@@ -164,15 +348,22 @@ def read_cartridge(root: Path) -> dict[str, Any] | None:
                 out["cover"] = fallback
         return out
 
+    history = read_stats(root)
+
     games = []
     for game in parsed["games"]:
         if not game["executable"]:
             continue  # nothing to start; the launcher shows these, a row cannot
+        recorded = history.get(stats_key(game["executable"]))
         games.append(
             {
                 "title": game["title"],
                 "executable": game["executable"],
                 "art": art_for(game) or art_for(parsed),
+                # Whatever every machine that has played this cartridge has
+                # recorded, including this one. Empty for a game nobody has
+                # started yet.
+                "stats": recorded if isinstance(recorded, dict) else {},
             }
         )
 
