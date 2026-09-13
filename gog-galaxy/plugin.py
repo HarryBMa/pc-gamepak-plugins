@@ -35,7 +35,12 @@ SCAN_SECONDS = 2.0
 
 class PcGamePakPlugin(Plugin):
     def __init__(self, reader, writer, token):
-        super().__init__(Platform.Generic, __version__, reader, writer, token)
+        # Not Platform.Generic, though the API has it: the Galaxy client refuses
+        # any platform outside its published list — "Platform generic given in
+        # plugin manifest ... is not allowed" — and there is no custom one.
+        # Kartridge was Kongregate's store and closed in 2021, so no live
+        # integration will be claiming it, and the name could hardly fit better.
+        super().__init__(Platform.Kartridge, __version__, reader, writer, token)
         self.catalog = catalog.Catalog()
         self.running = {}  # game id -> the launcher playing it
         self._last_scan = 0.0
