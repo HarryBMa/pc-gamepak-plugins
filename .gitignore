@@ -1,4 +1,12 @@
+# Decky
 node_modules/
 dist/
 __pycache__/
 *.pyc
+
+# Playnite
+bin/
+obj/
+*.user
+.vs/
+_build/

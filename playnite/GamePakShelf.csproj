@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- SDK-style, so `dotnet build` works with no Visual Studio and no .NET
+       Framework targeting pack installed: the reference assemblies come from
+       NuGet. -->
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Library</OutputType>
+    <RootNamespace>GamePakShelf</RootNamespace>
+    <AssemblyName>GamePakShelf</AssemblyName>
+    <LangVersion>8.0</LangVersion>
+    <UseWPF>true</UseWPF>
+    <Version>0.1.0</Version>
+    <Product>GamePakShelf</Product>
+    <Description>PC GamePak cartridge slot for Playnite</Description>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Playnite ships the SDK it runs with; build against that when it is
+         here, so the extension never asks for a newer one than is installed. -->
+    <PlayniteSdkLocal>$(LOCALAPPDATA)\Playnite\Playnite.SDK.dll</PlayniteSdkLocal>  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup Condition="Exists('$(PlayniteSdkLocal)')">
+    <Reference Include="Playnite.SDK">
+      <HintPath>$(PlayniteSdkLocal)</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="!Exists('$(PlayniteSdkLocal)')">
+    <PackageReference Include="PlayniteSDK" Version="6.11.0" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="extension.yaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="icon.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Assets\empty_slot.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
