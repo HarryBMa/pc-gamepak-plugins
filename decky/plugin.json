@@ -7,6 +7,6 @@
   "publish": {
     "tags": ["library", "home", "cartridges", "removable", "storage"],
     "description": "Games on a plugged-in cartridge appear as a row on the Steam home screen. Reads PC GamePak cartridges: a removable drive with a cartridge.conf at its root.",
-    "image": "https://raw.githubusercontent.com/HarryBMa/pc-gamepak-decky/main/assets/home.png"
+    "image": "https://raw.githubusercontent.com/HarryBMa/pc-gamepak-plugins/main/decky/assets/home.png"
   }
 }
