@@ -47,9 +47,9 @@ front-end can time it. Decky is the exception: it hands Steam a URI.
 `~/.local/state/pc-gamepak/settings.json` elsewhere. The launcher's settings
 dialog writes it; plugins read it. The rule is PC GamePak's
 (`core/src/frontend.rs`): the launcher is on unless switched off, every plugin
-is off unless switched on, and more than one may be on at once. Decky bends it
-in one case: on a Deck with no PC GamePak at all there is no settings file to
-switch anything on in, so there it stays on.
+is off unless switched on, and more than one may be on at once. Decky bends it:
+it is sold as needing nothing else installed, so a missing, unreadable or silent
+settings file leaves it on, and only `"decky": false` switches it off.
 
 | Id | Plugin | Where it installs |
 |---|---|---|
