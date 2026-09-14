@@ -35,7 +35,10 @@ keeps showing what it last read:
 
 Until then, pressing Play on a game whose cartridge has been pulled puts up a
 message saying to plug the cartridge in — every launch script checks before it
-asks the launcher. Tested in Heroic.
+asks the launcher. Heroic's and Pegasus's scripts are kept after the cartridge
+leaves for exactly this: deleting them, as the first version did, left Heroic's
+Play doing nothing at all. ES-DE's go, because ES-DE lists every script in its
+folder as a game.
 
 ## Switching front-ends on
 

@@ -106,10 +106,14 @@ class HeroicTests(Fixture):
 
         self.assertFalse(exporter.apply(self.entries, self.launcher), "nothing changed, nothing written")
 
+        script = Path(alpha["install"]["executable"])
         exporter.apply([], self.launcher)
         data = json.loads(library.read_text(encoding="utf-8"))
         self.assertEqual([g["app_name"] for g in data["games"]], ["someone-else"])
         self.assertEqual(list((self.base / "owned" / "art").iterdir()), [])
+        # Heroic keeps showing the game until its library is refreshed, and Play
+        # runs this script: it must still be there to say "plug it in".
+        self.assertTrue(script.is_file(), "the script outlives the cartridge")
 
     def test_a_missing_or_broken_library_is_started_fresh(self):
         config = self.base / "heroic"
@@ -144,6 +148,8 @@ class PegasusTests(Fixture):
         exporter.apply([], self.launcher)
         meta = (exporter.games_dir / "metadata.pegasus.txt").read_text(encoding="utf-8")
         self.assertNotIn("game:", meta)
+        self.assertEqual(len(list((exporter.games_dir / "scripts").iterdir())), 2,
+                         "Pegasus runs only what metadata names, so gone scripts can stay to explain")
 
     def test_a_title_cannot_start_a_new_key(self):
         self.assertEqual(pegasus.one_line("Evil\nlaunch: rm -rf /"), "Evil launch: rm -rf /")

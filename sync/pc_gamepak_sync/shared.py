@@ -120,15 +120,24 @@ def write_if_changed(path: Path, text: str, executable: bool = False) -> bool:
     return True
 
 
-def write_scripts(directory: Path, launcher: Path, found: List[Entry]) -> Dict[str, Path]:
-    """One launch script per entry in `directory`, which this owns entirely."""
+def write_scripts(directory: Path, launcher: Path, found: List[Entry], keep_gone: bool = False) -> Dict[str, Path]:
+    """One launch script per entry in `directory`, which this owns entirely.
+
+    `keep_gone` leaves the scripts of games whose cartridge has left. A
+    front-end that has not re-read its list still shows those games, and Play on
+    one runs its script — which has to exist to say "plug the cartridge in".
+    Deleting it made Play do nothing at all, silently, in Heroic. Only right
+    where the front-end runs the script its own entry names and nothing else;
+    ES-DE lists every script in its folder as a game, so there the scripts go.
+    """
     directory.mkdir(parents=True, exist_ok=True)
     scripts = {}
     for entry in found:
         path = directory / (entry.stem + script_suffix())
         write_if_changed(path, script_text(launcher, entry), executable=os.name != "nt")
         scripts[entry.id] = path
-    prune(directory, set(scripts.values()))
+    if not keep_gone:
+        prune(directory, set(scripts.values()))
     return scripts
 
 

@@ -82,7 +82,7 @@ class Exporter:
         except (OSError, ValueError):
             library = {}
 
-        scripts = shared.write_scripts(self.owned / "scripts", launcher, found)
+        scripts = shared.write_scripts(self.owned / "scripts", launcher, found, keep_gone=True)
         art_dir = self.owned / "art"
         records, keep = [], []
         for entry in found:
