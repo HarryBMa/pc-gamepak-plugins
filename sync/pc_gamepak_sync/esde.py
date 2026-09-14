@@ -99,7 +99,7 @@ class Exporter:
     def available(self) -> bool:
         return self.data_dir is not None
 
-    def apply(self, found: List[shared.Entry], launcher: Path) -> bool:
+    def apply(self, found: List[shared.Entry], launcher: Path, switched_on: bool = True) -> bool:
         changed = False
         roms = self.data_dir / "pc-gamepak" / "roms"
         scripts = shared.write_scripts(roms, launcher, found)

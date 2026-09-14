@@ -34,7 +34,7 @@ def log(message: str) -> None:
     print(time.strftime("%H:%M:%S ") + message, flush=True)
 
 
-def signature(cartridges, switches) -> tuple:
+def signature(cartridges, switches, states=()) -> tuple:
     """What, if it changes, means the front-ends need writing again."""
     shape = []
     for cartridge in cartridges:
@@ -43,7 +43,17 @@ def signature(cartridges, switches) -> tuple:
         except OSError:
             stamp = 0
         shape.append((str(cartridge.root), stamp, tuple(g.key for g in cartridge.playable_games)))
-    return tuple(shape), tuple(sorted(switches.items()))
+    return tuple(shape), tuple(sorted(switches.items())), tuple(states)
+
+
+def exporter_states(exporters, switches) -> list:
+    """Anything an exporter watches besides the drives — Heroic being open.
+    Asked only of front-ends that are installed and switched on."""
+    return [
+        (e.frontend_id, e.state())
+        for e in exporters
+        if hasattr(e, "state") and e.available() and switches.get(e.frontend_id)
+    ]
 
 
 def sync_once(exporters, only=None, previous=None):
@@ -51,7 +61,7 @@ def sync_once(exporters, only=None, previous=None):
     switches = {e.frontend_id: install.frontend_on(e.frontend_id) for e in exporters}
     if only:
         switches = {k: (v or k in only) for k, v in switches.items()}
-    current = signature(cartridges, switches)
+    current = signature(cartridges, switches, exporter_states(exporters, switches))
     if current == previous:
         return current
 
@@ -64,9 +74,10 @@ def sync_once(exporters, only=None, previous=None):
     for exporter in exporters:
         if not exporter.available():
             continue
-        wanted = found if switches.get(exporter.frontend_id) else []
+        on = bool(switches.get(exporter.frontend_id))
+        wanted = found if on else []
         try:
-            if exporter.apply(wanted, launcher):
+            if exporter.apply(wanted, launcher, switched_on=on):
                 log("%s: %d game%s" % (exporter.name, len(wanted), "" if len(wanted) == 1 else "s"))
         except Exception as error:  # one front-end's bad file must not stop the rest
             log("%s: %s" % (exporter.name, error))

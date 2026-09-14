@@ -27,7 +27,7 @@ Tested against a real cartridge — FTL, a Steam game — in each application.
 | **Playnite** | ✅ through the launcher, timed by Playnite | ✅ within two seconds; the slot fills and empties | ✅ on the slot's menu | Live |
 | **GOG Galaxy** | ✅ through the launcher; shows Running until the game exits | ✅ within two seconds; games grey out and come back | — | Live |
 | **Decky** (Steam Deck) | ✅ handed to Steam as a URI | ✅ within two seconds | — | Live |
-| **Heroic** | ✅ through the launcher | ⚠️ `pc-gamepak-sync` updates its library within two seconds; Heroic shows it on a manual library refresh | — | On refresh |
+| **Heroic** | ✅ through the launcher | ⚠️ `pc-gamepak-sync` updates its library within two seconds; Heroic shows it on a manual library refresh. A pulled cartridge's games show as not installed until Heroic closes, then go | — | On refresh |
 | **Pegasus** | ✅ through the launcher | ❌ updated live on disk, read at start | — | At start |
 | **ES-DE** | ✅ through the launcher | ❌ updated live on disk, read at start | — | At start |
 | **LaunchBox** | Not built | — | — | — |

@@ -82,7 +82,7 @@ class Exporter:
     def games_dir(self) -> Path:
         return self.config_dir / "pc-gamepak"
 
-    def apply(self, found: List[shared.Entry], launcher: Path) -> bool:
+    def apply(self, found: List[shared.Entry], launcher: Path, switched_on: bool = True) -> bool:
         changed = False
         scripts = shared.write_scripts(self.games_dir / "scripts", launcher, found, keep_gone=True)
         files = {key: "scripts/" + path.name for key, path in scripts.items()}

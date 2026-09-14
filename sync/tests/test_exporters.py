@@ -89,7 +89,8 @@ class HeroicTests(Fixture):
         config = self.base / "heroic"
         library = config / "sideload_apps" / "library.json"
         self.write(library, json.dumps({"games": [{"app_name": "someone-else", "title": "Theirs"}], "other": 1}))
-        exporter = heroic.Exporter(config_dir=config, owned=self.base / "owned")
+        self.heroic_open = True
+        exporter = heroic.Exporter(config_dir=config, owned=self.base / "owned", running=lambda: self.heroic_open)
 
         self.assertTrue(exporter.apply(self.entries, self.launcher))
         data = json.loads(library.read_text(encoding="utf-8"))
@@ -107,13 +108,40 @@ class HeroicTests(Fixture):
         self.assertFalse(exporter.apply(self.entries, self.launcher), "nothing changed, nothing written")
 
         script = Path(alpha["install"]["executable"])
+
+        # Cartridge pulled with Heroic open: the games stay, not installed, with
+        # their scripts — Heroic shows the tile until a refresh, and Play on it
+        # has to find both a record and a script, or it hangs at "Launching".
         exporter.apply([], self.launcher)
+        data = json.loads(library.read_text(encoding="utf-8"))
+        self.assertEqual([g["app_name"] for g in data["games"]][0], "someone-else")
+        ours = [g for g in data["games"] if g["app_name"].startswith("pcgamepak-")]
+        self.assertEqual([(g["title"], g["is_installed"]) for g in ours], [("Alpha", False), ("Gamma", False)])
+        self.assertTrue(script.is_file(), "the script outlives the cartridge")
+        self.assertTrue(ours[0]["art_cover"].startswith("file:"), "and so does the picture")
+
+        # Plugged back in: installed again, same entry.
+        exporter.apply(self.entries[:1], self.launcher)
+        data = json.loads(library.read_text(encoding="utf-8"))
+        ours = {g["title"]: g["is_installed"] for g in data["games"] if g["app_name"].startswith("pcgamepak-")}
+        self.assertEqual(ours, {"Alpha": True, "Gamma": False})
+
+        # Heroic closed: nothing can be showing a stale tile, so the pulled
+        # game goes, with its script and art. The plugged-in one stays.
+        self.heroic_open = False
+        exporter.apply(self.entries[:1], self.launcher)
+        data = json.loads(library.read_text(encoding="utf-8"))
+        ours = {g["title"]: g["is_installed"] for g in data["games"] if g["app_name"].startswith("pcgamepak-")}
+        self.assertEqual(ours, {"Alpha": True})
+        self.assertEqual(len(list((self.base / "owned" / "scripts").iterdir())), 1)
+
+        # Switched off in PC GamePak's settings, even with Heroic open: all ours go.
+        self.heroic_open = True
+        exporter.apply([], self.launcher, switched_on=False)
         data = json.loads(library.read_text(encoding="utf-8"))
         self.assertEqual([g["app_name"] for g in data["games"]], ["someone-else"])
         self.assertEqual(list((self.base / "owned" / "art").iterdir()), [])
-        # Heroic keeps showing the game until its library is refreshed, and Play
-        # runs this script: it must still be there to say "plug it in".
-        self.assertTrue(script.is_file(), "the script outlives the cartridge")
+        self.assertEqual(list((self.base / "owned" / "scripts").iterdir()), [])
 
     def test_a_missing_or_broken_library_is_started_fresh(self):
         config = self.base / "heroic"
@@ -233,6 +261,31 @@ class SyncLoopTests(Fixture):
         self.settings({"pegasus": True})
         cli.sync_once([exporter])
         self.assertIn("game: Alpha", self.meta(exporter))
+
+    def test_heroic_keeps_a_pulled_game_until_heroic_closes(self):
+        config = self.base / "heroic"
+        self.heroic_open = True
+        exporter = heroic.Exporter(config_dir=config, owned=self.base / "owned-heroic",
+                                   running=lambda: self.heroic_open)
+        library = config / "sideload_apps" / "library.json"
+
+        def installed():
+            games = json.loads(library.read_text(encoding="utf-8"))["games"]
+            return {g["title"]: g["is_installed"] for g in games}
+
+        self.settings({"heroic": True})
+        seen = cli.sync_once([exporter])
+        self.assertEqual(installed(), {"Alpha": True, "Gamma": True})
+
+        self.plugged = []
+        seen = cli.sync_once([exporter], previous=seen)
+        self.assertEqual(installed(), {"Alpha": False, "Gamma": False})
+
+        # Nothing on the drives changes when Heroic closes; the loop has to
+        # notice Heroic itself, or the games would wait for the next cartridge.
+        self.heroic_open = False
+        seen = cli.sync_once([exporter], previous=seen)
+        self.assertEqual(installed(), {})
 
     def test_pulling_the_cartridge_empties_it_and_nothing_repeats(self):
         exporter = self.exporter()

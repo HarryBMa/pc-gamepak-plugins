@@ -29,16 +29,21 @@ two seconds of a cartridge coming or going, but a front-end that is already open
 keeps showing what it last read:
 
 - **Heroic** picks the change up when you refresh its library (the refresh
-  button in the Library view). Tested: FTL appears with the cartridge in and
-  goes when it is pulled, on refresh, without a restart.
+  button in the Library view). A new cartridge's games appear installed. A
+  pulled cartridge's games are marked **not installed** rather than removed,
+  for as long as Heroic is open, and removed the first time it is not — its
+  next start shows only what is plugged in. Removing them while Heroic is open
+  broke it: it still shows the old tile until a refresh, and Play on a tile
+  whose entry has gone hangs at "Launching". Tested in Heroic 2.22.1: plug in,
+  refresh, FTL installed; pull, Play shows the message; refresh, not installed;
+  close Heroic, FTL gone.
 - **Pegasus** and **ES-DE** read their files at start. Restart them.
 
 Until then, pressing Play on a game whose cartridge has been pulled puts up a
 message saying to plug the cartridge in — every launch script checks before it
 asks the launcher. Heroic's and Pegasus's scripts are kept after the cartridge
-leaves for exactly this: deleting them, as the first version did, left Heroic's
-Play doing nothing at all. ES-DE's go, because ES-DE lists every script in its
-folder as a game.
+leaves for exactly this — Heroic's until it closes. ES-DE's go at once, because
+ES-DE lists every script in its folder as a game.
 
 ## Switching front-ends on
 
