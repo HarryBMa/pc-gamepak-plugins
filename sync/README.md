@@ -24,12 +24,18 @@ PC GamePak new enough to have `--play`.
 > through the launcher. Also tested against each file format on Windows and
 > Linux in CI.
 
-**All three read these files at start.** The sync tool updates them within two
-seconds of a cartridge coming or going, but a front-end that is already open
-keeps showing what it read — Heroic says so in its own log: "refresh not
-implemented on Sideload Library Manager". Restart it to see the change. Until
-then, pressing Play on a game whose cartridge has been pulled says to plug the
-cartridge in, because every launch script checks before it asks the launcher.
+**None of them notices on its own.** The sync tool updates their files within
+two seconds of a cartridge coming or going, but a front-end that is already open
+keeps showing what it last read:
+
+- **Heroic** picks the change up when you refresh its library (the refresh
+  button in the Library view). Tested: FTL appears with the cartridge in and
+  goes when it is pulled, on refresh, without a restart.
+- **Pegasus** and **ES-DE** read their files at start. Restart them.
+
+Until then, pressing Play on a game whose cartridge has been pulled puts up a
+message saying to plug the cartridge in — every launch script checks before it
+asks the launcher. Tested in Heroic.
 
 ## Switching front-ends on
 

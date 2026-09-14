@@ -27,16 +27,17 @@ Tested against a real cartridge — FTL, a Steam game — in each application.
 | **Playnite** | ✅ through the launcher, timed by Playnite | ✅ within two seconds; the slot fills and empties | ✅ on the slot's menu | Live |
 | **GOG Galaxy** | ✅ through the launcher; shows Running until the game exits | ✅ within two seconds; games grey out and come back | — | Live |
 | **Decky** (Steam Deck) | ✅ handed to Steam as a URI | ✅ within two seconds | — | Live |
-| **Heroic** | ✅ through the launcher | ❌ `pc-gamepak-sync` updates its library within two seconds, but Heroic only reads it at start | — | At start |
+| **Heroic** | ✅ through the launcher | ⚠️ `pc-gamepak-sync` updates its library within two seconds; Heroic shows it on a manual library refresh | — | On refresh |
 | **Pegasus** | ✅ through the launcher | ❌ updated live on disk, read at start | — | At start |
 | **ES-DE** | ✅ through the launcher | ❌ updated live on disk, read at start | — | At start |
 | **LaunchBox** | Not built | — | — | — |
 
-"At start" means a cartridge plugged in or pulled while the front-end is open
-shows up, or goes, the next time it starts. Until then a pulled cartridge's
-game stays on screen, and pressing Play on it says to plug the cartridge in
-rather than doing nothing. Eject anywhere else is the launcher's own, or
-Windows's.
+"On refresh" and "at start" mean a cartridge plugged in or pulled while the
+front-end is open shows up, or goes, when you refresh its library (Heroic) or
+the next time it starts (Pegasus, ES-DE). Until then a pulled cartridge's game
+stays on screen, and pressing Play on it puts up a message saying to plug the
+cartridge in rather than doing nothing. Eject anywhere else is the launcher's
+own, or Windows's.
 
 Decky is the one that plays without the launcher: Steam starts the game, so
 the cartridge counts the launch but not the hours.
