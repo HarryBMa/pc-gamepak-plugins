@@ -23,13 +23,15 @@ import type { Game } from "./types";
  * "47 h · last played 2 days ago on workshop" is a sentence only the cartridge
  * can say.
  *
- * A game nobody has started gets no line — "0 launches" is furniture.
+ * A game nobody has started gets no line — "0 launches" is furniture — unless
+ * it is for something other than a PC, which leads the line: "SNES · 3 h".
  */
 function history(game: Game): string | undefined {
   const stats = game.stats;
-  if (!stats?.launches) return undefined;
+  const platform = game.platform && game.platform.toUpperCase() !== "PC" ? game.platform : undefined;
+  if (!stats?.launches) return platform;
 
-  const parts: string[] = [];
+  const parts: string[] = platform ? [platform] : [];
   if ((stats.seconds ?? 0) >= 60) parts.push(duration(stats.seconds ?? 0));
   parts.push(`${stats.launches} ${stats.launches === 1 ? "launch" : "launches"}`);
   if (stats.lastPlayed) {

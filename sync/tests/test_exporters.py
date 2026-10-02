@@ -30,6 +30,7 @@ class Fixture(unittest.TestCase):
         self.write(self.cart / "cartridge.conf",
                    "[collection]\ntitle=Pack\ncover=.gamepak/cover.png\n"
                    "[game]\ntitle=Alpha\nexecutable=steam://rungameid/1\nbackground=.gamepak/background.png\n"
+                   "launches=3\nlast_played=2026-09-26T18:00:00Z\n"
                    "[game]\ntitle=No exe\n"
                    "[game]\ntitle=Gamma\nexecutable=Games/g.exe\n")
         self.launcher = self.write(self.base / "bin" / "pc-gamepak.exe", "")
@@ -206,6 +207,10 @@ class EsdeTests(Fixture):
         gamelist = ET.fromstring((data / "gamelists" / "pcgamepak" / "gamelist.xml").read_text(encoding="utf-8"))
         games = gamelist.findall("game")
         self.assertEqual([g.findtext("name") for g in games], ["Alpha", "Gamma"])
+        # The cartridge's own play count and last session, where ES-DE keeps them.
+        self.assertEqual(games[0].findtext("playcount"), "3")
+        self.assertRegex(games[0].findtext("lastplayed"), r"^202609\d\dT\d{6}$")
+        self.assertIsNone(games[1].find("playcount"), "never played, nothing claimed")
         for game in games:
             script = roms / game.findtext("path")[2:]
             self.assertTrue(script.is_file())

@@ -47,6 +47,17 @@ class Parsing(unittest.TestCase):
         # The collection's own cover, not a game's.
         self.assertEqual(got["art"]["cover"], "collection.jpg")
 
+    def test_platform_is_the_collection_s_unless_a_game_says(self):
+        parsed = cartridges.parse_conf(
+            "[collection]\ntitle=N\nplatform=SNES\n\n"
+            "[game]\ntitle=A\nexecutable=a\n\n"
+            "[game]\ntitle=B\nexecutable=b\nplatform=GBA\n"
+        )
+        self.assertEqual(parsed["platform"], "SNES")
+        self.assertEqual([g["platform"] for g in parsed["games"]], ["SNES", "GBA"])
+        single = cartridges.parse_conf("title=X\nexecutable=x\n")
+        self.assertEqual(single["games"][0]["platform"], "PC")
+
     def test_comments_and_blank_lines_are_ignored(self):
         got = cartridges.parse_conf(
             "# a comment\n"

@@ -16,6 +16,7 @@ Not yet run against ES-DE itself: the layout follows its user guide.
 from __future__ import annotations
 
 import os
+import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import List, Optional
@@ -71,6 +72,12 @@ def gamelist_text(found: List[shared.Entry], scripts: dict) -> str:
         game = ET.SubElement(root, "game")
         ET.SubElement(game, "path").text = "./" + scripts[entry.id].name
         ET.SubElement(game, "name").text = entry.title
+        # The cartridge's own count, which follows the drive between machines.
+        if entry.game.launches:
+            ET.SubElement(game, "playcount").text = str(entry.game.launches)
+        if entry.game.last_played:
+            ET.SubElement(game, "lastplayed").text = time.strftime(
+                "%Y%m%dT%H%M%S", time.localtime(entry.game.last_played))
     _indent(root)
     return '<?xml version="1.0"?>\n' + ET.tostring(root, encoding="unicode") + "\n"
 

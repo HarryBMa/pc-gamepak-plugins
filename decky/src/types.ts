@@ -24,6 +24,8 @@ export interface Game {
   title: string;
   executable: string;
   art: Art;
+  /** What it is for, from `platform=`: "PC", "SNES", "GBA"... */
+  platform?: string;
   stats?: GameStats;
 }
 
@@ -33,5 +35,7 @@ export interface Cartridge {
   title: string;
   mount: string;
   art: Art;
+  /** The collection's `platform=`, or "PC". */
+  platform?: string;
   games: Game[];
 }
