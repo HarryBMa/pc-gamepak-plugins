@@ -39,6 +39,9 @@ namespace GamePakShelf.Core
         /// <summary>Where the wizard puts a cartridge's own files.</summary>
         public const string AssetDir = ".gamepak";
 
+        /// <summary>A memory card's file; beside a cartridge it makes a combo drive.</summary>
+        public const string MemoryCardConf = "memorycard.conf";
+
         /// <summary>
         /// The launcher refuses a larger "cover", and so does this: a cartridge is
         /// not a trusted input, and the file is copied into Playnite's library.
@@ -179,6 +182,25 @@ namespace GamePakShelf.Core
                 IconPath = ResolveArt(root, Value(head, "icon")) ?? ResolveArt(root, "icon.png")
             };
 
+            // memory_card=yes anywhere in the conf, or a memory card's own file
+            // beside it -- the launcher's rule (memcard::is_combo_drive).
+            var everySection = sections.Values.Concat(games).ToList();
+            cartridge.MemoryCard = everySection.Any(s => IsYes(Value(s, "memory_card")))
+                || SafeExists(Path.Combine(root, MemoryCardConf));
+            cartridge.Platform = Value(head, "platform") ?? "PC";
+
+            // The hours: the cartridge's own count, single game or summed.
+            foreach (var played in isBundle ? games : new List<Dictionary<string, string>> { head })
+            {
+                cartridge.PlaytimeSeconds += Number(Value(played, "playtime"));
+                cartridge.Launches += Number(Value(played, "launches"));
+                DateTime? last = When(Value(played, "last_played"));
+                if (last.HasValue && (!cartridge.LastPlayed.HasValue || last > cartridge.LastPlayed))
+                {
+                    cartridge.LastPlayed = last;
+                }
+            }
+
             // A collection with no picture of its own borrows its first game's,
             // which is better than the empty-slot art for a slot that is not empty.
             if (cartridge.CoverPath == null && isBundle)
@@ -247,6 +269,44 @@ namespace GamePakShelf.Core
             catch
             {
                 // Illegal characters in a hand-written path cost the picture, not the cartridge.
+                return false;
+            }
+        }
+
+
+        private static bool IsYes(string value)
+        {
+            return value != null && new[] { "yes", "true", "1" }.Contains(value.ToLowerInvariant());
+        }
+
+
+        private static ulong Number(string value)
+        {
+            return ulong.TryParse(value, out ulong n) ? n : 0;
+        }
+
+
+        /// <summary><c>2026-09-26T18:00:00Z</c>, as the launcher writes it, in local time.</summary>
+        private static DateTime? When(string value)
+        {
+            return DateTime.TryParse(
+                value,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal,
+                out DateTime utc)
+                ? utc.ToLocalTime()
+                : (DateTime?)null;
+        }
+
+
+        private static bool SafeExists(string path)
+        {
+            try
+            {
+                return File.Exists(path);
+            }
+            catch
+            {
                 return false;
             }
         }

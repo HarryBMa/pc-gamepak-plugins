@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace GamePakShelf.Core
@@ -37,6 +38,30 @@ namespace GamePakShelf.Core
         public List<CartridgeGame> Games { get; set; } = new List<CartridgeGame>();
 
         public int GameCount => Games.Count;
+
+        /// <summary>
+        /// A combo drive: a cartridge that is a memory card too, so the launcher
+        /// can open on its saves (<c>--memcard</c>).
+        /// </summary>
+        public bool MemoryCard { get; set; }
+
+        /// <summary>
+        /// What the cartridge is for, from <c>platform=</c>: <c>PC</c>, <c>SNES</c>,
+        /// <c>GBA</c>... <c>PC</c> when it does not say.
+        /// </summary>
+        public string Platform { get; set; } = "PC";
+
+        /// <summary>
+        /// The hours the cartridge has counted, from <c>playtime=</c>, summed
+        /// over a collection's games: the cartridge's own count, which follows it
+        /// between machines where Playnite's would not.
+        /// </summary>
+        public ulong PlaytimeSeconds { get; set; }
+
+        public ulong Launches { get; set; }
+
+        /// <summary>The last time any game on it was played, or null for never.</summary>
+        public DateTime? LastPlayed { get; set; }
 
         /// <summary>
         /// Changes whenever the slot should be redrawn: another drive, or the

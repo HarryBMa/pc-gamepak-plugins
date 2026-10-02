@@ -22,10 +22,10 @@ for _candidate in (_HERE, _HERE.parent / "common"):
 
 from galaxy.api.consts import LicenseType, LocalGameState, Platform  # noqa: E402
 from galaxy.api.plugin import Plugin, create_and_run_plugin  # noqa: E402
-from galaxy.api.types import Authentication, Game, LicenseInfo, LocalGame  # noqa: E402
+from galaxy.api.types import Authentication, Game, GameTime, LicenseInfo, LocalGame  # noqa: E402
 
 import catalog  # noqa: E402
-from gamepak import install, scan  # noqa: E402
+from gamepak import install, read_cartridge, scan  # noqa: E402
 
 __version__ = "0.1.0"
 
@@ -74,6 +74,12 @@ class PcGamePakPlugin(Plugin):
         self.running[game_id] = install.start_detached(install.play_args(launcher, root, index))
         self.update_local_game_status(LocalGame(game_id, self._state(game_id)))
 
+    async def get_game_time(self, game_id, context):
+        """The hours the cartridge has counted: they follow the drive between
+        machines, where Galaxy's own would start again on each one. Nothing
+        known for a game whose cartridge is not plugged in."""
+        return self._game_time(game_id)
+
     async def install_game(self, game_id):
         # There is nothing to download: installing a cartridge game is plugging
         # the cartridge in. Showing the launcher's window for it would need the
@@ -88,6 +94,8 @@ class PcGamePakPlugin(Plugin):
         for game_id in finished:
             del self.running[game_id]
             self.update_local_game_status(LocalGame(game_id, self._state(game_id)))
+            # The launcher has written this session's hours to the cartridge.
+            self.update_game_time(self._game_time(game_id))
 
         if time.monotonic() - self._last_scan >= SCAN_SECONDS:
             self._scan(notify=True)
@@ -104,6 +112,14 @@ class PcGamePakPlugin(Plugin):
         if game_id in self.running:
             state |= LocalGameState.Running
         return state
+
+    def _game_time(self, game_id):
+        location = self.catalog.location(game_id)
+        cartridge = read_cartridge(location[0]) if location else None
+        if cartridge is None or location[1] >= len(cartridge.games):
+            return GameTime(game_id, None, None)
+        game = cartridge.games[location[1]]
+        return GameTime(game_id, game.playtime_seconds // 60, game.last_played)
 
     def _scan(self, notify=False):
         self._last_scan = time.monotonic()

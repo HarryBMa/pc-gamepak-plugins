@@ -12,6 +12,8 @@ PC GamePak cartridges as a GOG Galaxy 2.0 integration.
 - **Play** runs `pc-gamepak --drive <root> --play <n>`, so saves, hours and
   shader caches travel with the cartridge, and Galaxy shows the game as running
   until the launcher exits — which is when the game does.
+- **Hours** are the cartridge's own, from `cartridge.conf`, sent to Galaxy as
+  game time when a session ends: they follow the drive between machines.
 - Nothing to log in to: the integration connects with a local account.
 
 It needs PC GamePak installed, new enough to have `--play`.

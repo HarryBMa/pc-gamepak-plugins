@@ -61,6 +61,20 @@ try {
     Check "bundle: a game with no executable is listed, not playable" ($h.Games[0].Playable -and -not $h.Games[1].Playable)
     Check "single: playable when it names an executable" ($c.Games[0].Playable -and $c.Games[0].Title -eq "Hollow Knight")
 
+    # Hours, platform and a combo drive, as the launcher writes them
+    $combo = Join-Path $base "combo\"
+    New-Item -ItemType Directory -Force $combo | Out-Null
+    Set-Content (Join-Path $combo "cartridge.conf") "memory_card=yes`n[collection]`ntitle=Nintendo`nplatform=SNES`n[game]`ntitle=Zelda`nexecutable=z.sfc`nplaytime=3600`nlaunches=2`nlast_played=2026-09-20T10:00:00Z`n[game]`ntitle=Mario`nexecutable=m.sfc`nplaytime=600`nlaunches=1`nlast_played=2026-09-26T18:00:00Z"
+    $k = $R::Read($combo)
+    Check "combo: memory_card=yes is a combo drive" ($k.MemoryCard)
+    Check "combo: the collection's platform" ($k.Platform -eq "SNES")
+    Check "combo: hours summed over the games" ($k.PlaytimeSeconds -eq 4200 -and $k.Launches -eq 3)
+    Check "combo: last played is the latest game's" ($k.LastPlayed.ToUniversalTime() -eq [DateTime]::new(2026, 9, 26, 18, 0, 0, [DateTimeKind]::Utc))
+    Check "single: no platform is PC, no hours is none" ($c.Platform -eq "PC" -and $c.PlaytimeSeconds -eq 0 -and $null -eq $c.LastPlayed -and -not $c.MemoryCard)
+    Set-Content (Join-Path $single "memorycard.conf") "title=Card"
+    Check "single: a memorycard.conf beside it is a combo drive" ($R::Read($single).MemoryCard)
+    Check "memcard: the launcher opens on the card" ($S::MemoryCardArguments("E:\") -like "--drive * --memcard")
+
     # Paths off the drive are refused; the default cover is still found
     $evil = Join-Path $base "evil\"
     New-Item -ItemType Directory -Force $evil | Out-Null

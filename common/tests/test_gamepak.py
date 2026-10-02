@@ -58,6 +58,26 @@ class CartridgeTests(unittest.TestCase):
                          [(0, "A", True), (1, "No exe", False), (2, "C", True)])
         self.assertEqual([g.index for g in cart.playable_games], [0, 2])
 
+    def test_platform_hours_and_combo_as_the_launcher_writes_them(self):
+        self.s.write("cartridge.conf", "memory_card=yes\n[collection]\ntitle=Nintendo\nplatform=SNES\n"
+                                       "[game]\ntitle=Zelda\nexecutable=z.sfc\nplaytime=3600\nlaunches=2\n"
+                                       "last_played=2026-09-26T18:00:00Z\n"
+                                       "[game]\ntitle=Pokemon\nexecutable=p.gba\nplatform=GBA\nplaytime=bad\n")
+        cart = read_cartridge(self.s.root)
+        self.assertTrue(cart.memory_card)
+        self.assertEqual(cart.platform, "SNES")
+        self.assertEqual([g.platform for g in cart.games], ["SNES", "GBA"])
+        zelda, pokemon = cart.games
+        self.assertEqual((zelda.playtime_seconds, zelda.launches, zelda.last_played), (3600, 2, 1790445600))
+        self.assertEqual((pokemon.playtime_seconds, pokemon.last_played), (0, None))
+
+    def test_a_plain_cartridge_is_a_pc_game_and_a_card_beside_it_a_combo(self):
+        self.s.write("cartridge.conf", "title=FTL\nexecutable=x.exe\n")
+        cart = read_cartridge(self.s.root)
+        self.assertEqual((cart.platform, cart.games[0].platform, cart.memory_card), ("PC", "PC", False))
+        self.s.write("memorycard.conf", "title=Card\n")
+        self.assertTrue(read_cartridge(self.s.root).memory_card)
+
     def test_keys_are_stable_and_distinct(self):
         self.s.write("cartridge.conf", "[game]\ntitle=A\nexecutable=steam://rungameid/1\n[game]\ntitle=B\nexecutable=steam://rungameid/2\n")
         first = [g.key for g in read_cartridge(self.s.root).games]

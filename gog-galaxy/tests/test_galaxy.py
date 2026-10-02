@@ -158,7 +158,12 @@ class PluginTests(unittest.TestCase):
 
         self.process.exited = True
         plugin.tick()
-        self.assertEqual(sent[-1][1]["local_game"].local_game_state, LocalGameState.Installed)
+        status = [params for method, params in sent if method == "local_game_status_changed"]
+        self.assertEqual(status[-1]["local_game"].local_game_state, LocalGameState.Installed)
+        # And the hours the launcher wrote to the cartridge, sent as it ends.
+        self.assertEqual(sent[-1][0], "game_time_updated")
+        self.assertEqual(sent[-1][1]["game_time"].game_id, game_id)
+        self.assertEqual(self.run_async(plugin.get_game_time(game_id, None)).time_played, 0)
 
     def test_pulling_the_cartridge_greys_the_game_out(self):
         from galaxy.api.consts import LocalGameState

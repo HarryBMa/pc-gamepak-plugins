@@ -28,6 +28,7 @@ integrations on an embedded 3.7.
 
 from __future__ import annotations
 
+import datetime
 import hashlib
 import os
 import string
@@ -36,6 +37,8 @@ from typing import Dict, List, Optional
 
 CONF_NAME = "cartridge.conf"
 ASSET_DIR = ".gamepak"
+# A memory card's file; beside a cartridge it makes a combo drive.
+MEMORY_CARD_CONF = "memorycard.conf"
 
 # The launcher refuses a larger "cover", and so does this: a cartridge is a
 # drive somebody may have handed you, and art gets copied into other programs.
@@ -57,11 +60,20 @@ LINUX_MOUNT_ROOTS = ("/run/media", "/media", "/mnt")
 class Game:
     """One game on a cartridge."""
 
-    def __init__(self, index: int, title: str, executable: str, art: Dict[str, str]):
+    def __init__(self, index: int, title: str, executable: str, art: Dict[str, str],
+                 section: Optional[Dict[str, str]] = None, platform: str = "PC"):
         self.index = index
         self.title = title
         self.executable = executable
         self.art = art
+        section = section or {}
+        #: What the game is for, from `platform=`: PC, SNES, GBA...
+        self.platform = section.get("platform") or platform
+        #: The hours the cartridge has counted for it, which follow the drive.
+        self.playtime_seconds = _number(section.get("playtime"))
+        self.launches = _number(section.get("launches"))
+        #: Unix time of the last session, or None for never.
+        self.last_played = _when(section.get("last_played"))
 
     @property
     def playable(self) -> bool:
@@ -85,12 +97,17 @@ class Game:
 class Cartridge:
     """A mounted cartridge."""
 
-    def __init__(self, root: Path, title: str, is_bundle: bool, art: Dict[str, str], games: List[Game]):
+    def __init__(self, root: Path, title: str, is_bundle: bool, art: Dict[str, str], games: List[Game],
+                 platform: str = "PC", memory_card: bool = False):
         self.root = root
         self.title = title
         self.is_bundle = is_bundle
         self.art = art
         self.games = games
+        #: What the cartridge is for, from `platform=`. Each game's unless it says otherwise.
+        self.platform = platform
+        #: A combo drive: the launcher opens on its saves with `--memcard`.
+        self.memory_card = memory_card
 
     @property
     def playable_games(self) -> List[Game]:
@@ -180,6 +197,35 @@ def _art(root: Path, section: Dict[str, str], guess_cover: bool) -> Dict[str, st
     return art
 
 
+def _number(value: Optional[str]) -> int:
+    try:
+        return max(int(value or 0), 0)
+    except ValueError:
+        return 0
+
+
+def _when(value: Optional[str]) -> Optional[int]:
+    """`2026-09-26T18:00:00Z`, as the launcher writes it, as Unix time."""
+    if not value:
+        return None
+    try:
+        return int(datetime.datetime.strptime(value.strip(), "%Y-%m-%dT%H:%M:%SZ")
+                   .replace(tzinfo=datetime.timezone.utc).timestamp())
+    except ValueError:
+        return None
+
+
+def _is_combo(root: Path, parsed: Dict[str, object]) -> bool:
+    """memory_card=yes anywhere, or a memory card's file beside it."""
+    sections = list(parsed["sections"].values()) + list(parsed["games"])
+    if any(s.get("memory_card", "").lower() in ("yes", "true", "1") for s in sections):
+        return True
+    try:
+        return (root / MEMORY_CARD_CONF).is_file()
+    except OSError:
+        return False
+
+
 def read_cartridge(root: Path) -> Optional[Cartridge]:
     """The cartridge at `root`, or None if there is not one."""
     root = Path(root)
@@ -192,8 +238,10 @@ def read_cartridge(root: Path) -> Optional[Cartridge]:
     sections = parsed["sections"]  # type: Dict[str, Dict[str, str]]
     raw_games = parsed["games"]  # type: List[Dict[str, str]]
 
+    combo = _is_combo(root, parsed)
     if raw_games:
         head = sections.get("collection", {})
+        platform = head.get("platform") or "PC"
         art = _art(root, head, guess_cover=True)
         games = []
         for index, raw in enumerate(raw_games):
@@ -203,16 +251,20 @@ def read_cartridge(root: Path) -> Optional[Cartridge]:
                 raw.get("title") or "Unknown Game",
                 raw.get("executable", ""),
                 game_art or dict(art),
+                raw,
+                platform,
             ))
         if "cover" not in art:
             # A collection with no picture of its own borrows its first game's.
             art.update({k: v for k, v in games[0].art.items() if k == "cover"})
-        return Cartridge(root, head.get("title") or "Game Collection", True, art, games)
+        return Cartridge(root, head.get("title") or "Game Collection", True, art, games, platform, combo)
 
     head = sections.get("general", {})
     art = _art(root, head, guess_cover=True)
     title = head.get("title") or "Unknown Game"
-    return Cartridge(root, title, False, art, [Game(0, title, head.get("executable", ""), art)])
+    platform = head.get("platform") or "PC"
+    game = Game(0, title, head.get("executable", ""), art, head, platform)
+    return Cartridge(root, title, False, art, [game], platform, combo)
 
 
 def candidate_roots() -> List[Path]:

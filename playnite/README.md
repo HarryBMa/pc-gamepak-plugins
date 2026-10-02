@@ -39,6 +39,14 @@ and `--safe-eject` — because the launcher does every launch and every eject.
   stays. Any read would mount it again, so the slot stops looking at that drive
   from the moment Eject is chosen until the letter disappears — the cartridge
   being unplugged. **Look for a cartridge again** looks at it anyway.
+- **Memory card**, on a combo cartridge's menu: the launcher opens on the
+  drive's saves (`--memcard`).
+- **The cartridge's hours.** Play time, play count and last played come from
+  `cartridge.conf`, summed over a collection, so they follow the drive
+  between machines rather than starting again in each Playnite.
+- **Its platform.** `platform=SNES` (or GBA, PS1...) puts the slot under
+  Playnite's own platform of that name; no `platform=`, or one Playnite does
+  not know, is PC.
 - `PC_GAMEPAK_LAUNCHER` overrides where the launcher is looked for.
 
 ## What it does not do
