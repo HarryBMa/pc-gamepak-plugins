@@ -98,15 +98,19 @@ def parse_conf(text: str) -> dict[str, Any]:
 
     if games:
         head = collection or general
+        # What the cartridge is for (`platform=`), each game's unless it says.
+        platform = head.get("platform") or "PC"
         return {
             "title": head.get("title", "Unknown cartridge"),
             "executable": games[0].get("executable", ""),
             "art": {k: head.get(k, "") for k in ART_KEYS},
+            "platform": platform,
             "games": [
                 {
                     "title": g.get("title", "Unknown game"),
                     "executable": g.get("executable", ""),
                     "art": {k: g.get(k, "") for k in ART_KEYS},
+                    "platform": g.get("platform") or platform,
                 }
                 for g in games
             ],
@@ -115,12 +119,14 @@ def parse_conf(text: str) -> dict[str, Any]:
     title = general.get("title", "Unknown game")
     executable = general.get("executable", "")
     art = {k: general.get(k, "") for k in ART_KEYS}
+    platform = general.get("platform") or "PC"
     return {
         "title": title,
         "executable": executable,
         "art": art,
+        "platform": platform,
         # One game, expressed as a list, so callers never special-case.
-        "games": [{"title": title, "executable": executable, "art": art}],
+        "games": [{"title": title, "executable": executable, "art": art, "platform": platform}],
     }
 
 
@@ -360,6 +366,7 @@ def read_cartridge(root: Path) -> dict[str, Any] | None:
                 "title": game["title"],
                 "executable": game["executable"],
                 "art": art_for(game) or art_for(parsed),
+                "platform": game["platform"],
                 # Whatever every machine that has played this cartridge has
                 # recorded, including this one. Empty for a game nobody has
                 # started yet.
@@ -372,6 +379,7 @@ def read_cartridge(root: Path) -> dict[str, Any] | None:
         "title": parsed["title"],
         "mount": str(root),
         "art": art_for(parsed),
+        "platform": parsed["platform"],
         "games": games,
     }
 

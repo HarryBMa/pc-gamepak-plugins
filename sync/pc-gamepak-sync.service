@@ -1,0 +1,11 @@
+[Unit]
+Description=Keep Heroic, Pegasus and ES-DE in step with plugged-in PC GamePak cartridges
+Documentation=https://github.com/HarryBMa/pc-gamepak-plugins/tree/main/sync
+
+[Service]
+ExecStart=/usr/bin/env python3 %h/.local/share/pc-gamepak/pc-gamepak-sync.pyz
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

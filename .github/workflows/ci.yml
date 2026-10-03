@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows is where cartridges are drive letters and launch scripts are
+        # .cmd; Linux is where they are mounts and .sh. Both code paths matter.
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          # GOG Galaxy's embedded Python, and what galaxy.plugin.api 0.71 requires.
+          python-version: "3.13"
+      - name: Install GOG Galaxy's plugin API
+        run: python -m pip install -r gog-galaxy/requirements.txt
+      - name: Shared core
+        run: python -m unittest discover -s common/tests -v
+      - name: pc-gamepak-sync (Heroic, Pegasus, ES-DE)
+        run: python -m unittest discover -s sync/tests -v
+      - name: GOG Galaxy
+        run: python -m unittest discover -s gog-galaxy/tests -v
+      - name: Package GOG Galaxy and pc-gamepak-sync
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          python tools/package.py galaxy
+          python tools/package.py sync
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          name: galaxy-and-sync
+          path: dist/*
+
+  decky:
+    name: Decky
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: decky
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Backend
+        run: python test/test_cartridges.py
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: decky/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm run typecheck
+      - name: Build
+        run: pnpm run build
+      - name: Package
+        working-directory: .
+        run: python tools/package.py decky
+      - uses: actions/upload-artifact@v4
+        with:
+          name: decky
+          path: dist/*
+
+  playnite:
+    name: Playnite
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      # No Playnite on the runner: the project falls back to the PlayniteSDK
+      # NuGet package, and the tests load the SDK from the NuGet cache.
+      - name: Build and pack
+        shell: pwsh
+        run: ./playnite/build.ps1 -Pack
+      - name: Tests
+        # Windows PowerShell, not pwsh: the extension is .NET Framework 4.8.
+        shell: powershell
+        run: ./playnite/test/test_reader.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playnite
+          path: playnite/_build/*.pext

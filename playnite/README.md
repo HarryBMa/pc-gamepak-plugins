@@ -1,5 +1,8 @@
 # PC GamePak for Playnite
 
+[![Release](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=playnite-v*&display_name=tag&label=release)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=playnite-v)
+[![CI](https://img.shields.io/github/actions/workflow/status/HarryBMa/pc-gamepak-plugins/ci.yml?branch=main&label=CI)](https://github.com/HarryBMa/pc-gamepak-plugins/actions/workflows/ci.yml)
+
 A cartridge slot as the first tile in Playnite's library. With no cartridge in,
 it shows an empty slot. Plug one in and the tile becomes that cartridge — its
 title, cover, background and icon. Play starts the game; right-click ejects.
@@ -36,6 +39,14 @@ and `--safe-eject` — because the launcher does every launch and every eject.
   stays. Any read would mount it again, so the slot stops looking at that drive
   from the moment Eject is chosen until the letter disappears — the cartridge
   being unplugged. **Look for a cartridge again** looks at it anyway.
+- **Memory card**, on a combo cartridge's menu: the launcher opens on the
+  drive's saves (`--memcard`).
+- **The cartridge's hours.** Play time, play count and last played come from
+  `cartridge.conf`, summed over a collection, so they follow the drive
+  between machines rather than starting again in each Playnite.
+- **Its platform.** `platform=SNES` (or GBA, PS1...) puts the slot under
+  Playnite's own platform of that name; no `platform=`, or one Playnite does
+  not know, is PC.
 - `PC_GAMEPAK_LAUNCHER` overrides where the launcher is looked for.
 
 ## What it does not do

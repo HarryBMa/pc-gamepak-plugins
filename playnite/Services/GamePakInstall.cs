@@ -136,6 +136,12 @@ namespace GamePakShelf.Services
         /// what its window would -- saves, hours, shader caches -- and stays
         /// running until the game ends, which is what Playnite times.
         /// </summary>
+        public static string MemoryCardArguments(string root)
+        {
+            return $"--drive {Drive(root)} --memcard";
+        }
+
+
         public static string PlayArguments(string root, int index)
         {
             return $"--drive {Drive(root)} --play {index}";

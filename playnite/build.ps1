@@ -3,10 +3,11 @@
 
       .\build.ps1             build into _build\
       .\build.ps1 -Install    ...and copy into Playnite's extensions folder
-      .\build.ps1 -Pack       ...and make a .pext with Playnite's Toolbox
+      .\build.ps1 -Pack       ...and make _build\PCGamePak-<version>.pext
 
-    Install and Pack both need Playnite installed. Close Playnite before
-    installing: it holds the DLL open while it runs.
+    A .pext is a zip with extension.yaml at its root, which is all Playnite's
+    Toolbox produces too — so packing needs no Playnite, and runs on CI.
+    Install needs Playnite: close it first, as it holds the DLL open.
 #>
 param(
     [switch]$Install,
@@ -37,13 +38,18 @@ if ($Install) {
 }
 
 if ($Pack) {
-    $toolbox = Join-Path $env:LOCALAPPDATA "Playnite\Toolbox.exe"
-    if (-not (Test-Path $toolbox)) { throw "Playnite's Toolbox.exe not found at $toolbox" }
+    $version = (Select-String -Path (Join-Path $here "extension.yaml") -Pattern '^\s*Version\s*:\s*(.+)$').Matches[0].Groups[1].Value.Trim()
+    $pext = Join-Path $out "PCGamePak-$version.pext"
 
-    $staging = Join-Path $out "staging"
-    New-Item -ItemType Directory -Force (Join-Path $staging "Assets") | Out-Null
-    foreach ($file in $ship) { Copy-Item (Join-Path $out $file) (Join-Path $staging $file) }
-
-    & $toolbox pack $staging $out
-    Get-ChildItem $out -Filter *.pext | ForEach-Object { Write-Host "Packed $($_.FullName)" }
+    Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
+    $zip = [System.IO.Compression.ZipFile]::Open($pext, [System.IO.Compression.ZipArchiveMode]::Create)
+    try {
+        foreach ($file in $ship) {
+            # Forward slashes: the zip standard, and what every unzip expects.
+            [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, (Join-Path $out $file), $file.Replace('\', '/'))
+        }
+    } finally {
+        $zip.Dispose()
+    }
+    Write-Host "Packed $pext"
 }

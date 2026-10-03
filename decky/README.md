@@ -1,5 +1,8 @@
 # PC GamePak for Decky
 
+[![Release](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=decky-v*&display_name=tag&label=release)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=decky-v)
+[![CI](https://img.shields.io/github/actions/workflow/status/HarryBMa/pc-gamepak-plugins/ci.yml?branch=main&label=CI)](https://github.com/HarryBMa/pc-gamepak-plugins/actions/workflows/ci.yml)
+
 Plug a cartridge into a Steam Deck and its games appear as a row on the home
 screen. No launcher window, no desktop.
 
@@ -122,7 +125,6 @@ would be — `/run/media/$USER/...`, `uid=1000`, no root:
 An NTFS cartridge needs no per-game settings at all: Steam can install Proton
 onto it like any other drive. Native Linux games and btrfs cartridges were never
 affected.
-- **Eject.** Same reason.
 
 ## What is verified
 
