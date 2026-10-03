@@ -30,7 +30,7 @@ Tested against a real cartridge — FTL, a Steam game — in each application.
 | **Heroic** | ✅ through the launcher | ⚠️ `pc-gamepak-sync` updates its library within two seconds; Heroic shows it on a manual library refresh. A pulled cartridge's games show as not installed until Heroic closes, then go | — | On refresh |
 | **Pegasus** | ✅ through the launcher | ❌ updated live on disk, read at start | — | At start |
 | **ES-DE** | ✅ through the launcher | ❌ updated live on disk, read at start | — | At start |
-| **LaunchBox** | ⚠️ wired as Playnite's, through the launcher; not yet pressed in LaunchBox | ✅ the slot fills with the cartridge's art and hours | ⚠️ on the slot's menu; not yet pressed | Live |
+| **LaunchBox** | ✅ through the launcher, timed by LaunchBox; a collection's games from the right-click menu | ✅ within two seconds; the slot fills with the cartridge's art and hours | ✅ on the slot's menu | Live |
 
 "On refresh" and "at start" mean a cartridge plugged in or pulled while the
 front-end is open shows up, or goes, when you refresh its library (Heroic) or

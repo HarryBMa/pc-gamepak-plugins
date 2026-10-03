@@ -79,5 +79,6 @@ Playnite extension's code, compiled in from `..\playnite\` rather than copied:
 none of it knows which front-end it is in. The plugin logs to
 `pc-gamepak.log` beside itself.
 
-Tested on LaunchBox 14 against a real two-game collection cartridge: the slot
-appeared with its art, hours and additional apps.
+Tested in LaunchBox 14 against a real two-game collection cartridge: the slot
+appeared with its art, hours and additional apps, Play ran the game, each game
+started from the right-click menu, and Eject took the drive away.
