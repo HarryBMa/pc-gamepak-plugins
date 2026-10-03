@@ -4,8 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-using Playnite.SDK;
-
 namespace GamePakShelf.Services
 {
     /// <summary>
@@ -34,9 +32,6 @@ namespace GamePakShelf.Services
             /// <summary>For a person: the result, or one line per program in the way.</summary>
             public List<string> Lines { get; set; } = new List<string>();
         }
-
-
-        private static readonly ILogger logger = LogManager.GetLogger();
 
 
         /// <summary>
@@ -71,13 +66,13 @@ namespace GamePakShelf.Services
                         result.Lines.Add(errors.Trim());
                     }
 
-                    logger.Info($"GamePakShelf: eject {root} (force {force}) -> {result.Outcome}: {string.Join(" / ", result.Lines)}");
+                    GamePakLog.Info($"eject {root} (force {force}) -> {result.Outcome}: {string.Join(" / ", result.Lines)}");
                     return result;
                 }
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "GamePakShelf: could not run the launcher to eject.");
+                GamePakLog.Error(ex, "could not run the launcher to eject.");
                 return new Result { Outcome = Outcome.Error, Lines = { ex.Message } };
             }
         }

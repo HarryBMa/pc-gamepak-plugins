@@ -40,6 +40,7 @@ try {
     Check "single: cover" ($c.CoverPath -like "*\.gamepak\cover.png")
     Check "single: background" ($c.BackgroundPath -like "*background.jpg")
     Check "single: unnamed icon.png still found" ($c.IconPath -like "*single\icon.png")
+    Check "single: a logo that is not on the drive is no logo" ($null -eq $c.LogoPath)
     Check "single: one game, not a bundle" (-not $c.IsBundle -and $c.GameCount -eq 1)
     Check "single: signature names the drive" ($c.Signature -like "$single|*")
 
@@ -52,6 +53,7 @@ try {
     Check "bundle: collection title" ($b.Title -eq "God of War Collection")
     Check "bundle: an empty [game] is not a game" ($b.IsBundle -and $b.GameCount -eq 2)
     Check "bundle: borrows the first game's cover" ($b.CoverPath -like "*\.gamepak\gow.jpg")
+    Check "bundle: no logo of its own or its games' is none" ($null -eq $b.LogoPath)
     Check "bundle: games numbered as the launcher numbers them" ($b.Games[0].Title -eq "GoW 2018" -and $b.Games[1].Title -eq "Two")
 
     $half = Join-Path $base "half\"

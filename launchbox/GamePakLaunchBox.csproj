@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- LaunchBox 13.20+ runs on .NET 10 and loads plugins built for it from
+       LaunchBox\Plugins\<folder>\. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <OutputType>Library</OutputType>
+    <RootNamespace>GamePakLaunchBox</RootNamespace>
+    <AssemblyName>GamePakLaunchBox</AssemblyName>
+    <Nullable>disable</Nullable>
+    <UseWPF>true</UseWPF>
+    <!-- The menu-item interfaces return a System.Drawing.Image. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <Version>0.1.0</Version>
+    <Product>PC GamePak for LaunchBox</Product>
+    <Description>PC GamePak cartridge slot for LaunchBox and Big Box</Description>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- The plugin SDK ships only inside a LaunchBox install and is not on
+         NuGet. LAUNCHBOX_DIR points at another install. -->
+    <LaunchBoxDir Condition="'$(LAUNCHBOX_DIR)' != ''">$(LAUNCHBOX_DIR)</LaunchBoxDir>
+    <LaunchBoxDir Condition="'$(LaunchBoxDir)' == ''">$(USERPROFILE)\LaunchBox</LaunchBoxDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Unbroken.LaunchBox.Plugins">
+      <HintPath>$(LaunchBoxDir)\Core\Unbroken.LaunchBox.Plugins.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Shared with the Playnite extension: reading a cartridge, finding the
+       launcher, watching for a cartridge, ejecting. None of it knows which
+       front-end it is in. -->
+  <ItemGroup>
+    <Compile Include="..\playnite\Core\Cartridge.cs" Link="Shared\Cartridge.cs" />
+    <Compile Include="..\playnite\Core\CartridgeReader.cs" Link="Shared\CartridgeReader.cs" />
+    <Compile Include="..\playnite\Services\GamePakInstall.cs" Link="Shared\GamePakInstall.cs" />
+    <Compile Include="..\playnite\Services\GamePakLog.cs" Link="Shared\GamePakLog.cs" />
+    <Compile Include="..\playnite\Services\CartridgeWatcher.cs" Link="Shared\CartridgeWatcher.cs" />
+    <Compile Include="..\playnite\Services\Ejector.cs" Link="Shared\Ejector.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\playnite\Assets\empty_slot.png" Link="Assets\empty_slot.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

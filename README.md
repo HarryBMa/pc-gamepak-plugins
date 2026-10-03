@@ -16,7 +16,7 @@ look.
 | [`playnite/`](playnite/) | Playnite, on Windows | The first tile in the library; Play through the launcher with no window, Eject on its menu | [![Playnite](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=playnite-v*&display_name=tag&label=playnite)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=playnite-v) | ![Status](https://img.shields.io/badge/run%20end%20to%20end-real%20cartridge-brightgreen) |
 | [`gog-galaxy/`](gog-galaxy/) | GOG Galaxy 2.0 | Owned games, installed while the cartridge is in | [![Galaxy](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=galaxy-v*&display_name=tag&label=galaxy)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=galaxy-v) | ![Status](https://img.shields.io/badge/tested-in%20the%20Galaxy%20client-brightgreen) |
 | [`sync/`](sync/) | Heroic, Pegasus, ES-DE | Sideloaded games / a collection / a system, while the cartridge is in | [![Sync](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=sync-v*&display_name=tag&label=sync)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=sync-v) | ![Status](https://img.shields.io/badge/tested-in%20all%20three%20apps-brightgreen) |
-| [`launchbox/`](launchbox/) | LaunchBox / Big Box | A cartridge slot, as in Playnite | — | ![Status](https://img.shields.io/badge/status-design%20only-lightgrey) |
+| [`launchbox/`](launchbox/) | LaunchBox / Big Box | The slot as a game in a PC GamePak platform; Play through the launcher, each game an additional app, Eject on its menu | — | ![Status](https://img.shields.io/badge/run%20in%20LaunchBox-real%20cartridge-brightgreen) |
 
 ## What works
 
@@ -30,7 +30,7 @@ Tested against a real cartridge — FTL, a Steam game — in each application.
 | **Heroic** | ✅ through the launcher | ⚠️ `pc-gamepak-sync` updates its library within two seconds; Heroic shows it on a manual library refresh. A pulled cartridge's games show as not installed until Heroic closes, then go | — | On refresh |
 | **Pegasus** | ✅ through the launcher | ❌ updated live on disk, read at start | — | At start |
 | **ES-DE** | ✅ through the launcher | ❌ updated live on disk, read at start | — | At start |
-| **LaunchBox** | Not built | — | — | — |
+| **LaunchBox** | ⚠️ wired as Playnite's, through the launcher; not yet pressed in LaunchBox | ✅ the slot fills with the cartridge's art and hours | ⚠️ on the slot's menu; not yet pressed | Live |
 
 "On refresh" and "at start" mean a cartridge plugged in or pulled while the
 front-end is open shows up, or goes, when you refresh its library (Heroic) or
@@ -81,12 +81,11 @@ settings file leaves it on, and only `"decky": false` switches it off.
 | `playnite` | `playnite/` | `%APPDATA%\Playnite\Extensions\PCGamePak` |
 | `gog_galaxy` | `gog-galaxy/` | `%LOCALAPPDATA%\GOG.com\Galaxy\plugins\installed\pc-gamepak-galaxy` |
 | `heroic`, `pegasus`, `esde` | `sync/` | wherever `pc-gamepak-sync` runs from |
-| `launchbox` | `launchbox/` | `LaunchBox\Plugins\PCGamePak` (planned) |
+| `launchbox` | `launchbox/` | `LaunchBox\Plugins\PCGamePak` |
 
-Every id is in PC GamePak's register — `launchbox` marked not built — once
-[HarryBMa/pc-gamepak#24](https://github.com/HarryBMa/pc-gamepak/pull/24) is in,
-so each gets a switch under **Front-ends** in its settings dialog. Before that,
-the new ones are switched on by hand in `settings.json`.
+Every id is in PC GamePak's register, so each gets a switch under **Where a
+cartridge opens** in its settings dialog, and the dialog says whether the plugin
+is installed.
 
 ## Releases
 

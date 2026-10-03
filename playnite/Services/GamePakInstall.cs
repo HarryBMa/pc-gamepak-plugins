@@ -2,7 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+#if NETFRAMEWORK
 using System.Web.Script.Serialization;
+#else
+using System.Text.Json;
+#endif
 
 namespace GamePakShelf.Services
 {
@@ -19,8 +23,11 @@ namespace GamePakShelf.Services
     /// </summary>
     public static class GamePakInstall
     {
-        /// <summary>This extension's name in the register.</summary>
-        public const string FrontEndId = "playnite";
+        /// <summary>
+        /// This front-end's name in the register. Each plugin sets its own at
+        /// startup: this code is shared between them.
+        /// </summary>
+        public static string FrontEndId { get; set; } = "playnite";
 
 
         /// <summary><c>%LOCALAPPDATA%\PC-GamePak</c>: settings, and the installed binaries.</summary>
@@ -48,7 +55,7 @@ namespace GamePakShelf.Services
 
 
         /// <summary>
-        /// Whether the user has switched Playnite on as a front-end.
+        /// Whether the user has switched this front-end on.
         ///
         /// Off when nothing has been said, which is the register's rule for every
         /// plugin: installing one does not switch it on. A file that cannot be
@@ -67,10 +74,11 @@ namespace GamePakShelf.Services
                 return false;
             }
 
+            // Only a real true counts. "yes" is not a boolean, and a plugin
+            // being on is not something to infer -- the launcher drops it too.
+#if NETFRAMEWORK
             try
             {
-                // Only a real true counts. "yes" is not a boolean, and a plugin
-                // being on is not something to infer -- the launcher drops it too.
                 return new JavaScriptSerializer().DeserializeObject(settingsJson) is IDictionary<string, object> settings
                     && settings.TryGetValue("frontends", out object frontends)
                     && frontends is IDictionary<string, object> map
@@ -86,6 +94,23 @@ namespace GamePakShelf.Services
             {
                 return false;
             }
+#else
+            try
+            {
+                using (JsonDocument document = JsonDocument.Parse(settingsJson))
+                {
+                    return document.RootElement.ValueKind == JsonValueKind.Object
+                        && document.RootElement.TryGetProperty("frontends", out JsonElement frontends)
+                        && frontends.ValueKind == JsonValueKind.Object
+                        && frontends.TryGetProperty(FrontEndId, out JsonElement on)
+                        && on.ValueKind == JsonValueKind.True;
+                }
+            }
+            catch (JsonException)
+            {
+                return false;
+            }
+#endif
         }
 
 
