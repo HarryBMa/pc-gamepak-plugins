@@ -83,9 +83,9 @@ settings file leaves it on, and only `"decky": false` switches it off.
 | `heroic`, `pegasus`, `esde` | `sync/` | wherever `pc-gamepak-sync` runs from |
 | `launchbox` | `launchbox/` | `LaunchBox\Plugins\PCGamePak` |
 
-Every id is in PC GamePak's register, so each gets a switch under **Where a
-cartridge opens** in its settings dialog, and the dialog says whether the plugin
-is installed.
+Every id is in PC GamePak's register (`core/src/frontend.rs`), so each gets a switch under **Front-ends** in its settings
+dialog. The Android ones have no id: there is no `settings.json` on a phone to
+hold a switch, so they are on once installed.
 
 ## Releases
 

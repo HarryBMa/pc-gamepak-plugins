@@ -58,27 +58,12 @@ LaunchBox 13.20 or later (it runs on .NET 10). Close LaunchBox and Big Box,
 then unzip the release into `LaunchBox\Plugins\`, so it ends up as
 `LaunchBox\Plugins\PCGamePak\GamePakLaunchBox.dll`. Or from a checkout:
 
-```powershell
-.\build.ps1 -Install
-```
+To pick this up: install LaunchBox, reference the DLL the way
+`playnite/GamePakShelf.csproj` references Playnite's SDK — from the local
+install when present — and check the image-folder naming against a real
+install before trusting the table above.
 
-## Build
+## LaunchBox for Android
 
-Needs the .NET 10 SDK and a LaunchBox install: the plugin SDK,
-`Unbroken.LaunchBox.Plugins.dll`, ships only inside LaunchBox (`Core\`) and is
-not on NuGet. The project finds it under `%USERPROFILE%\LaunchBox`, or wherever
-`LAUNCHBOX_DIR` says. That is also why CI does not build this one.
-
-```powershell
-.\build.ps1           # _build\
-.\build.ps1 -Pack     # _build\pc-gamepak-launchbox-<version>.zip
-```
-
-Reading a cartridge, finding the launcher, watching drives and ejecting are the
-Playnite extension's code, compiled in from `..\playnite\` rather than copied:
-none of it knows which front-end it is in. The plugin logs to
-`pc-gamepak.log` beside itself.
-
-Tested in LaunchBox 14 against a real two-game collection cartridge: the slot
-appeared with its art, hours and additional apps, Play ran the game, each game
-started from the right-click menu, and Eject took the drive away.
+A different program with no plugin API; it imports ROM folders. What a
+cartridge can offer it is in the [Android design](../android/README.md).
