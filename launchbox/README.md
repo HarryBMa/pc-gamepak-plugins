@@ -39,3 +39,8 @@ To pick this up: install LaunchBox, reference the DLL the way
 `playnite/GamePakShelf.csproj` references Playnite's SDK — from the local
 install when present — and check the image-folder naming against a real
 install before trusting the table above.
+
+## LaunchBox for Android
+
+A different program with no plugin API; it imports ROM folders. What a
+cartridge can offer it is in the [Android design](../android/README.md).

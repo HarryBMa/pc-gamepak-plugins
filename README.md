@@ -17,6 +17,21 @@ look.
 | [`gog-galaxy/`](gog-galaxy/) | GOG Galaxy 2.0 | Owned games, installed while the cartridge is in | [![Galaxy](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=galaxy-v*&display_name=tag&label=galaxy)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=galaxy-v) | ![Status](https://img.shields.io/badge/tested-in%20the%20Galaxy%20client-brightgreen) |
 | [`sync/`](sync/) | Heroic, Pegasus, ES-DE | Sideloaded games / a collection / a system, while the cartridge is in | [![Sync](https://img.shields.io/github/v/release/HarryBMa/pc-gamepak-plugins?filter=sync-v*&display_name=tag&label=sync)](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=sync-v) | ![Status](https://img.shields.io/badge/tested-in%20all%20three%20apps-brightgreen) |
 | [`launchbox/`](launchbox/) | LaunchBox / Big Box | A cartridge slot, as in Playnite | — | ![Status](https://img.shields.io/badge/status-design%20only-lightgrey) |
+| [`android/`](android/) | Daijishō, and Pegasus, ES-DE and LaunchBox on Android | Emulated cartridges only, from files the cartridge carries | — | ![Status](https://img.shields.io/badge/status-design%20only-lightgrey) |
+
+## Where each runs
+
+| Front-end | Windows | Linux / Steam Deck | macOS | Android |
+|---|---|---|---|---|
+| **Pegasus Frontend** | ✅ `sync/` | ✅ `sync/` | ❌ PC GamePak has no macOS build | 📝 [`android/`](android/) |
+| **ES-DE** | ✅ `sync/` | ✅ `sync/` | ❌ as above | 📝 [`android/`](android/) |
+| **Playnite** | ✅ `playnite/` | 📝 when Playnite's Linux port ships; the extension targets .NET Framework 4.8 and would need porting with it | — | — |
+| **Daijishō** | — | — | — | 📝 [`android/`](android/) |
+| **LaunchBox / Big Box** | 📝 [`launchbox/`](launchbox/) | — | — | 📝 [`android/`](android/) |
+
+📝 is designed, not built. Android can only play emulated cartridges
+(`platform=` other than PC), and has no launcher to carry saves and hours; the
+[Android design](android/README.md) says what that means for each app.
 
 ## What works
 
@@ -83,10 +98,10 @@ settings file leaves it on, and only `"decky": false` switches it off.
 | `heroic`, `pegasus`, `esde` | `sync/` | wherever `pc-gamepak-sync` runs from |
 | `launchbox` | `launchbox/` | `LaunchBox\Plugins\PCGamePak` (planned) |
 
-Every id is in PC GamePak's register — `launchbox` marked not built — once
-[HarryBMa/pc-gamepak#24](https://github.com/HarryBMa/pc-gamepak/pull/24) is in,
-so each gets a switch under **Front-ends** in its settings dialog. Before that,
-the new ones are switched on by hand in `settings.json`.
+Every id is in PC GamePak's register (`core/src/frontend.rs`), `launchbox`
+marked not built, so each gets a switch under **Front-ends** in its settings
+dialog. The Android ones have no id: there is no `settings.json` on a phone to
+hold a switch, so they are on once installed.
 
 ## Releases
 
