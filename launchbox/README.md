@@ -1,39 +1,62 @@
-# PC GamePak for LaunchBox — design
+# PC GamePak for LaunchBox
 
-![Status](https://img.shields.io/badge/status-design%20only-lightgrey)
+A cartridge slot in LaunchBox and Big Box, as in Playnite: one game in a
+**PC GamePak** platform, empty with no cartridge in and the cartridge itself
+with one.
 
-Not built yet. This is the plan, and what is missing to build it.
+## What it does
 
-## What it would do
+- Checks every drive except the system drive for `cartridge.conf`, every two
+  seconds, and keeps one game in the PC GamePak platform in step with what it
+  finds. A cartridge plugged in or pulled while LaunchBox is open shows up, or
+  goes, within two seconds.
+- **The slot carries the cartridge**: its title, cover (`Box - Front`),
+  background (`Fanart - Background`) and logo (`Clear Logo`), copied into
+  LaunchBox's image folders so pulling the drive does not pull the pictures out
+  from under it; and the **hours the cartridge has counted** — play time, play
+  count and last played — which follow the drive between machines.
+- **A single game**: Play runs `pc-gamepak.exe --drive X:\ --play 0`. The
+  launcher has no window, carries the saves, hours and shader caches as its
+  window would, and stays running until the game ends, which is what LaunchBox
+  times. *Open in PC GamePak* is an additional app.
+- **A collection**: Play opens the launcher's window, which is the picker with
+  each game's art, and every game is also an additional app — *Play XCOM 2*,
+  *Play Chimera Squad* — for starting it directly.
+- **A combo drive** has a *Memory card* additional app, which opens the
+  launcher on the drive's saves.
+- **Eject cartridge** on the slot's menu, in LaunchBox and Big Box, runs
+  `pc-gamepak.exe --drive X:\ --safe-eject`. Something still running from the
+  drive is named, with the offer to force quit and eject.
+- **Empty**, the slot shows the empty-slot picture, and Play opens the
+  cartridge wizard.
+- A cartridge change while any game is running waits until it stops, so
+  LaunchBox never records play time against a slot that has been replaced.
+- *Tools → PC GamePak: look for a cartridge again* re-reads an ejected drive
+  that was plugged back in.
 
-The same thing the Playnite extension does, in LaunchBox and Big Box: a
-cartridge slot as the first game of a "PC GamePak" platform, empty with no
-cartridge in, the cartridge's art with one, Play through the launcher, and
-Eject on the game's menu.
+## What it does not do
 
-## How, in LaunchBox's plugin API
+- **More than one cartridge.** One slot; with two in, the lower drive letter wins.
+- **The cartridge's platform.** The slot lives in the PC GamePak platform so it
+  can be found; LaunchBox gives a game one platform, so `platform=SNES` is not
+  shown here. (Playnite's extension does use it.)
 
-LaunchBox loads .NET plugins from `LaunchBox\Plugins\`, written against
-`Unbroken.LaunchBox.Plugins.dll`.
+## Switching it on
 
-| Need | API |
-|---|---|
-| Start watching once LaunchBox or Big Box is up | `ISystemEventsPlugin.OnEventRaised` — `LaunchBoxStartupCompleted` / `BigBoxStartupCompleted` |
-| The slot entry | `PluginHelper.DataManager.AddNewGame(title)` in a platform added with `AddNewPlatform`, then `Save(true)` |
-| Play | `IGame.ApplicationPath` = the launcher, `IGame.CommandLine` = `--drive X:\ --play 0` (or `--show` for a collection) |
-| Cover and background | LaunchBox reads images from `Images\<Platform>\Box - Front\` and `Fanart - Background\`, named after the game's title — copied there, not set on the game |
-| Eject | `IGameMenuItemPlugin` — a menu item on the slot game, running `pc-gamepak --safe-eject` |
-| The switch | `{"frontends": {"launchbox": true}}` in PC GamePak's settings, as every plugin here |
+PC GamePak's rule for every plugin: off until switched on. In PC GamePak's
+Settings, under **Where a cartridge opens**, switch on **LaunchBox**. Until then
+the plugin keeps no slot at all. The switch is one line in
+`%LOCALAPPDATA%\PC-GamePak\settings.json`:
 
-The Playnite extension's `CartridgeReader`, `GamePakInstall` and `Ejector` are
-plain C# with no Playnite types, and would be shared rather than rewritten.
+```json
+{ "frontends": { "launchbox": true } }
+```
 
-## What is missing
+## Install
 
-**`Unbroken.LaunchBox.Plugins.dll`.** It ships only inside a LaunchBox install
-(`LaunchBox\Core\`), is not on NuGet, and LaunchBox is not installed on the
-machine this was written on. Code written against the documentation alone
-could not be compiled or checked, so it has not been written.
+LaunchBox 13.20 or later (it runs on .NET 10). Close LaunchBox and Big Box,
+then unzip the release into `LaunchBox\Plugins\`, so it ends up as
+`LaunchBox\Plugins\PCGamePak\GamePakLaunchBox.dll`. Or from a checkout:
 
 To pick this up: install LaunchBox, reference the DLL the way
 `playnite/GamePakShelf.csproj` references Playnite's SDK — from the local

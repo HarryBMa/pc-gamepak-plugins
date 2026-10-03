@@ -52,6 +52,10 @@ namespace GamePakShelf
         public GamePakShelfPlugin(IPlayniteAPI api)
             : base(api)
         {
+            // The shared watcher and ejector log through these.
+            GamePakInstall.FrontEndId = "playnite";
+            GamePakLog.Info = message => logger.Info("GamePakShelf: " + message);
+            GamePakLog.Error = (ex, message) => logger.Error(ex, "GamePakShelf: " + message);
         }
 
 

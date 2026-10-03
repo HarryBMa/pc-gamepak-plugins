@@ -6,8 +6,6 @@ using System.Threading;
 
 using GamePakShelf.Core;
 
-using Playnite.SDK;
-
 namespace GamePakShelf.Services
 {
     /// <summary>
@@ -23,8 +21,6 @@ namespace GamePakShelf.Services
     public class CartridgeWatcher : IDisposable
     {
         private const int PollMs = 2000;
-
-        private static readonly ILogger logger = LogManager.GetLogger();
 
         /// <summary>Called with the cartridge now in the slot (null for none), off the UI thread.</summary>
         private readonly Action<Cartridge> onChanged;
@@ -50,7 +46,7 @@ namespace GamePakShelf.Services
         }
 
 
-        /// <summary>Whether the last poll found Playnite switched on in PC GamePak's settings.</summary>
+        /// <summary>Whether the last poll found this front-end switched on in PC GamePak's settings.</summary>
         public bool FrontEndOn
         {
             get { lock (gate) { return frontEndOn; } }
@@ -138,7 +134,7 @@ namespace GamePakShelf.Services
                     {
                         settingsStamp = stamp;
                         frontEndOn = GamePakInstall.IsFrontEndOn();
-                        logger.Info($"GamePakShelf: Playnite front-end is {(frontEndOn ? "on" : "off")} in PC GamePak's settings.");
+                        GamePakLog.Info($"{GamePakInstall.FrontEndId} is {(frontEndOn ? "on" : "off")} in PC GamePak's settings.");
                     }
 
                     on = frontEndOn;
@@ -157,15 +153,15 @@ namespace GamePakShelf.Services
                     lastSignature = signature;
                 }
 
-                logger.Info(cartridge == null
-                    ? "GamePakShelf: no cartridge."
-                    : $"GamePakShelf: cartridge \"{cartridge.Title}\" in {cartridge.Root}.");
+                GamePakLog.Info(cartridge == null
+                    ? "no cartridge."
+                    : $"cartridge \"{cartridge.Title}\" in {cartridge.Root}.");
 
                 onChanged(cartridge);
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "GamePakShelf: poll failed.");
+                GamePakLog.Error(ex, "poll failed.");
             }
             finally
             {

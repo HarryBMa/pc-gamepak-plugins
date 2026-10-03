@@ -24,6 +24,9 @@ namespace GamePakShelf.Core
         /// <summary>Absolute path to the hero / background on the drive, or null.</summary>
         public string BackgroundPath { get; set; }
 
+        /// <summary>Absolute path to the title logo on the drive, or null.</summary>
+        public string LogoPath { get; set; }
+
         /// <summary>Absolute path to the icon source on the drive, or null.</summary>
         public string IconPath { get; set; }
 

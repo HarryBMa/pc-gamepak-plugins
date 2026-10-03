@@ -176,6 +176,9 @@ namespace GamePakShelf.Core
                 // image on the drive is right for the one picture a tile must
                 // have and wrong for the ones it may not.
                 BackgroundPath = ResolveArt(root, Value(head, "background")),
+                // A collection's own logo, else the first game's that has one.
+                LogoPath = ResolveArt(root, Value(head, "logo"))
+                    ?? games.Select(g => ResolveArt(root, Value(g, "logo"))).FirstOrDefault(p => p != null),
                 // The icon is the exception: the drive's own icon picture is
                 // there whether or not the conf names it, and without one
                 // Playnite's list shows a generic pad beside the slot.
