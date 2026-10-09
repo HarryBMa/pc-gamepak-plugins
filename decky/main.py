@@ -110,6 +110,19 @@ class Plugin:
                     found.append(app_id)
         return found
 
+    async def get_game_facts(self) -> list[dict[str, Any]]:
+        """Hours, launches and HowLongToBeat for every game plugged in.
+
+        For Deck Shelves' metadata, statistics and widget. No artwork, and read
+        fresh from each drive so hours played since it went in are counted.
+        """
+        out: list[dict[str, Any]] = []
+        for cartridge in self._cartridges:
+            out.extend(
+                await asyncio.to_thread(cartridges.game_facts, Path(cartridge["mount"]))
+            )
+        return out
+
     async def get_shortcut_candidates(self) -> list[dict[str, str]]:
         """Games the cartridge carries itself, rather than points at.
 

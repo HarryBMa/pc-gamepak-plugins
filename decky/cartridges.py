@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -111,6 +112,7 @@ def parse_conf(text: str) -> dict[str, Any]:
                     "executable": g.get("executable", ""),
                     "art": {k: g.get(k, "") for k in ART_KEYS},
                     "platform": g.get("platform") or platform,
+                    "how_long": how_long(g),
                 }
                 for g in games
             ],
@@ -126,7 +128,15 @@ def parse_conf(text: str) -> dict[str, Any]:
         "art": art,
         "platform": platform,
         # One game, expressed as a list, so callers never special-case.
-        "games": [{"title": title, "executable": executable, "art": art, "platform": platform}],
+        "games": [
+            {
+                "title": title,
+                "executable": executable,
+                "art": art,
+                "platform": platform,
+                "how_long": how_long(general),
+            }
+        ],
     }
 
 
@@ -327,6 +337,75 @@ def host_name() -> str:
         return Path("/etc/hostname").read_text(encoding="utf-8").strip()
     except OSError:
         return ""
+
+
+def how_long(section: dict[str, str]) -> dict[str, int]:
+    """HowLongToBeat's figures, in seconds, as the wizard writes them.
+
+    `hltb_main=`, `hltb_extra=`, `hltb_complete=` under the game. Only the ones
+    present and positive come back, so an empty dict means no estimate.
+    """
+    out: dict[str, int] = {}
+    for name in ("main", "extra", "complete"):
+        try:
+            value = int(section.get(f"hltb_{name}", "").strip())
+        except ValueError:
+            continue
+        if value > 0:
+            out[name] = value
+    return out
+
+
+STEAM_URI = re.compile(r"steam://rungameid/(\d+)", re.I)
+
+
+def game_facts(root: Path) -> list[dict[str, Any]]:
+    """What is known about each game on one cartridge, with no artwork.
+
+    Read fresh from `cartridge.conf` and `.gamepak/stats.json` every time,
+    because the hours change while the cartridge stays in: a scan that only
+    notices cartridges coming and going would go on showing the hours from
+    when it was plugged in.
+
+    `appid` is Steam's, for a `steam://` game; `exe` is the absolute path, for
+    a carried one, which is what a shortcut made for it is keyed by. Paths
+    that would leave the drive are dropped, as they are everywhere else here.
+    """
+    conf = root / CONF_NAME
+    try:
+        parsed = parse_conf(conf.read_text(encoding="utf-8", errors="replace"))
+    except OSError:
+        return []
+    history = read_stats(root)
+    mount = os.path.realpath(root)
+    out: list[dict[str, Any]] = []
+    for game in parsed["games"]:
+        executable = game["executable"]
+        if not executable:
+            continue
+        match = STEAM_URI.match(executable)
+        exe = None
+        if not match and "://" not in executable:
+            path = os.path.realpath(os.path.join(mount, executable.replace("\\", "/")))
+            if path == mount or not path.startswith(mount + os.sep):
+                continue
+            exe = path
+        recorded = history.get(stats_key(executable))
+        recorded = recorded if isinstance(recorded, dict) else {}
+        out.append(
+            {
+                "cartridge": parsed["title"],
+                "title": game["title"],
+                "platform": game["platform"],
+                "appid": int(match.group(1)) if match else None,
+                "exe": exe,
+                "seconds": int(recorded.get("seconds") or 0),
+                "launches": int(recorded.get("launches") or 0),
+                "lastPlayed": recorded.get("lastPlayed"),
+                "howLong": game.get("how_long", {}),
+            }
+        )
+    return out
 
 
 def read_cartridge(root: Path) -> dict[str, Any] | None:

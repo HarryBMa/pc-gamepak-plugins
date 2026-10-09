@@ -314,5 +314,59 @@ class FrontEndSetting(unittest.TestCase):
         self.assertTrue(cartridges.is_enabled())
 
 
+class Facts(unittest.TestCase):
+    """What Deck Shelves is told: hours, launches and estimates, per game."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def write(self, conf, stats=None):
+        (self.root / "cartridge.conf").write_text(conf, encoding="utf-8")
+        if stats is not None:
+            (self.root / ".gamepak").mkdir(exist_ok=True)
+            (self.root / ".gamepak" / "stats.json").write_text(
+                '{"games": %s}' % stats, encoding="utf-8"
+            )
+
+    def test_hltb_keys_become_seconds_and_junk_is_dropped(self):
+        got = cartridges.parse_conf(
+            "title=X\nexecutable=x\nhltb_main=36000\nhltb_extra=oops\nhltb_complete=0\n"
+        )
+        self.assertEqual(got["games"][0]["how_long"], {"main": 36000})
+
+    def test_a_steam_game_carries_its_appid_hours_and_estimate(self):
+        self.write(
+            "title=FTL\nexecutable=steam://rungameid/212680\nhltb_main=54000\n",
+            '{"steam://rungameid/212680": {"seconds": 7200, "launches": 3, "lastPlayed": 1700000000}}',
+        )
+        (fact,) = cartridges.game_facts(self.root)
+        self.assertEqual(fact["appid"], 212680)
+        self.assertIsNone(fact["exe"])
+        self.assertEqual((fact["seconds"], fact["launches"]), (7200, 3))
+        self.assertEqual(fact["howLong"], {"main": 54000})
+        self.assertEqual(fact["cartridge"], "FTL")
+
+    def test_a_carried_game_is_keyed_by_its_absolute_path(self):
+        (self.root / "Games").mkdir()
+        self.write("title=Celeste\nexecutable=Games\\Celeste.exe\n")
+        (fact,) = cartridges.game_facts(self.root)
+        self.assertIsNone(fact["appid"])
+        self.assertEqual(
+            fact["exe"], os.path.realpath(self.root / "Games" / "Celeste.exe")
+        )
+        self.assertEqual(fact["seconds"], 0)
+
+    def test_a_path_leaving_the_drive_is_dropped(self):
+        self.write("title=Bad\nexecutable=../../etc/passwd\n")
+        self.assertEqual(cartridges.game_facts(self.root), [])
+
+    def test_no_conf_means_no_facts(self):
+        self.assertEqual(cartridges.game_facts(self.root), [])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

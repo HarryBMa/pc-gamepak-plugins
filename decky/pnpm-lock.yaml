@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@deck-shelves/api':
-        specifier: ^4.0.5
-        version: 4.0.5
+        specifier: ^4.1.1
+        version: 4.1.1
       '@decky/api':
         specifier: ^1.1.3
         version: 1.1.3
@@ -39,8 +39,8 @@ importers:
 
 packages:
 
-  '@deck-shelves/api@4.0.5':
-    resolution: {integrity: sha512-ImNZwt2tdLO885/IlMkjlBvwoMjCkR4njrtiGfC+KTU2y1gpOKSyaxuqgD6KC5LTyRCIWKLWWJ6EIuyiW9S05Q==}
+  '@deck-shelves/api@4.1.1':
+    resolution: {integrity: sha512-WDRE2tLT+aHwjwyWV053GMWfv8tumhSwKOWsZbl9FN8cx3CcpmY6oogYWMirdoYjVmfHxsP4DoS8wfq25SIOrg==}
     engines: {node: '>=20'}
 
   '@decky/api@1.1.3':
@@ -685,7 +685,7 @@ packages:
 
 snapshots:
 
-  '@deck-shelves/api@4.0.5': {}
+  '@deck-shelves/api@4.1.1': {}
 
   '@decky/api@1.1.3': {}
 
