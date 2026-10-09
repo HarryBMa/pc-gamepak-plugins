@@ -24,6 +24,11 @@ reads it; it does not need PC GamePak installed.
 - Offers the cartridge's games to [Deck Shelves](https://github.com/santojon/Deck-Shelves)
   as a shelf source, so it can put them on the home screen. This is the route
   that works; add a shelf there and pick **PC GamePak cartridge** as its source.
+  The shelf refreshes itself within two seconds of a cartridge going in or
+  coming out. Deck Shelves also gets each cartridge game's hours, launches,
+  last played and HowLongToBeat estimates as **metadata**, the totals as
+  **statistics** under *Playtime*, and a **Cartridge slot** widget saying what
+  is plugged in.
 - Lists the same games in the Quick Access menu, each with what the *cartridge*
   remembers: hours, launches, and when and where it was last played. Those
   numbers come off the drive, not out of Steam — see [Hours](#hours).
@@ -130,9 +135,10 @@ affected.
 
 | | |
 |---|---|
-| `cartridges.py` — parsing, art resolution, mount scanning, the stats file | **30 tests, passing.** `python test/test_cartridges.py` |
+| `cartridges.py` — parsing, art resolution, mount scanning, the stats file | **36 tests, passing.** `python test/test_cartridges.py` |
 | `main.py` — the Decky wrapper | **Runs.** Loads, and reports `cartridges changed` as a drive comes and goes |
 | Deck Shelves source | **Works.** Resolves 9 appids from a ten-game cartridge, 0 after eject, 9 again on reinsert |
+| Deck Shelves refresh, metadata, statistics, widget (0.2.0) | **Built and typechecked against `@deck-shelves/api` 4.1.1; not yet run on a Deck** |
 | Quick Access panel | **Works.** |
 | The home-row patch in `src/CartridgeShelf.tsx` | **Does not land.** Registered, never applied — see below |
 

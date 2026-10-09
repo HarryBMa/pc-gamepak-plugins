@@ -45,6 +45,15 @@ async function writeOwned(owned: Owned): Promise<void> {
   await setSettings({ ...s, ownedShortcuts: owned });
 }
 
+/** The shortcuts this plugin owns, by the absolute path they start. */
+export async function ownedByExe(): Promise<Record<string, number>> {
+  try {
+    return await readOwned();
+  } catch {
+    return {};
+  }
+}
+
 /** Appids of the shortcuts this plugin owns, for the shelf source to include. */
 export async function ownedAppIds(): Promise<number[]> {
   try {
