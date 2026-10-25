@@ -138,7 +138,7 @@ affected.
 | `cartridges.py` — parsing, art resolution, mount scanning, the stats file | **36 tests, passing.** `python test/test_cartridges.py` |
 | `main.py` — the Decky wrapper | **Runs.** Loads, and reports `cartridges changed` as a drive comes and goes |
 | Deck Shelves source | **Works.** Resolves 9 appids from a ten-game cartridge, 0 after eject, 9 again on reinsert |
-| Deck Shelves refresh, metadata, statistics, widget (0.2.0) | **Built and typechecked against `@deck-shelves/api` 4.1.1; not yet run on a Deck** |
+| Deck Shelves refresh, metadata, statistics, widget (0.2.0) | **Works.** Run on a Deck with Deck Shelves |
 | Quick Access panel | **Works.** |
 | The home-row patch in `src/CartridgeShelf.tsx` | **Does not land.** Registered, never applied — see below |
 
@@ -192,7 +192,11 @@ so outright.
 
 ## Install
 
-Not in the Decky store. Build it and copy it over, from this `decky/` folder:
+Not in the Decky store. Download `pc-gamepak-decky-<version>.zip` from the
+[releases](https://github.com/HarryBMa/pc-gamepak-plugins/releases?q=decky-v)
+and install it from Decky's settings → Developer → *Install plugin from ZIP*.
+
+Or build it and copy it over, from this `decky/` folder:
 
 ```bash
 pnpm install
