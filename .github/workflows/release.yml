@@ -4,6 +4,10 @@ name: Release
 #   playnite-v0.1   decky-v0.1.0   galaxy-v0.1.0   sync-v0.1.0
 # The version in the tag must match the one the plugin declares, or the release
 # is refused rather than published under a name that lies about its contents.
+#
+# Push the tags one push at a time: GitHub starts no workflow at all for a push
+# of more than three tags. A tag that slipped through that way (or any tag
+# already on the repository) is released from Actions → Release → Run workflow.
 
 on:
   push:
@@ -12,21 +16,32 @@ on:
       - "decky-v*"
       - "galaxy-v*"
       - "sync-v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "An existing tag to release, e.g. decky-v0.2.0"
+        required: true
+
+env:
+  # The tag being released: the pushed one, or the one asked for.
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 permissions:
   contents: write
 
 jobs:
   playnite:
-    if: startsWith(github.ref_name, 'playnite-v')
+    if: startsWith(inputs.tag || github.ref_name, 'playnite-v')
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
       - name: Build, test and pack
         shell: pwsh
         run: |
           $declared = (Select-String -Path playnite/extension.yaml -Pattern '^\s*Version\s*:\s*(.+)$').Matches[0].Groups[1].Value.Trim()
-          if ("playnite-v$declared" -ne "${{ github.ref_name }}") { throw "tag ${{ github.ref_name }} does not match extension.yaml Version $declared" }
+          if ("playnite-v$declared" -ne $env:TAG) { throw "tag $env:TAG does not match extension.yaml Version $declared" }
           ./playnite/build.ps1 -Pack
           powershell -ExecutionPolicy Bypass -File playnite/test/test_reader.ps1
           if ($LASTEXITCODE -ne 0) { throw "tests failed" }
@@ -34,13 +49,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
-        run: gh release create "${{ github.ref_name }}" (Get-ChildItem playnite/_build/*.pext).FullName --title "Playnite extension ${{ github.ref_name }}" --generate-notes
+        run: gh release create $env:TAG (Get-ChildItem playnite/_build/*.pext).FullName --title "Playnite extension $env:TAG" --generate-notes
 
   python-plugins:
-    if: startsWith(github.ref_name, 'galaxy-v') || startsWith(github.ref_name, 'sync-v')
+    if: startsWith(inputs.tag || github.ref_name, 'galaxy-v') || startsWith(inputs.tag || github.ref_name, 'sync-v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -53,22 +70,24 @@ jobs:
       - name: Package
         id: package
         run: |
-          case "$GITHUB_REF_NAME" in
+          case "$TAG" in
             galaxy-v*) target=galaxy; declared=$(python -c "import json;print(json.load(open('gog-galaxy/manifest.json'))['version'])") ;;
             sync-v*)   target=sync;   declared=$(python -c "import re;print(re.search(r'__version__ = \"(.+)\"', open('sync/pc_gamepak_sync/__init__.py').read()).group(1))") ;;
           esac
-          [ "$GITHUB_REF_NAME" = "$target-v$declared" ] || { echo "tag $GITHUB_REF_NAME does not match declared version $declared"; exit 1; }
+          [ "$TAG" = "$target-v$declared" ] || { echo "tag $TAG does not match declared version $declared"; exit 1; }
           echo "file=$(python tools/package.py $target)" >> "$GITHUB_OUTPUT"
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" "${{ steps.package.outputs.file }}" --title "$GITHUB_REF_NAME" --generate-notes
+        run: gh release create "$TAG" "${{ steps.package.outputs.file }}" --title "$TAG" --generate-notes
 
   decky:
-    if: startsWith(github.ref_name, 'decky-v')
+    if: startsWith(inputs.tag || github.ref_name, 'decky-v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -82,7 +101,7 @@ jobs:
         working-directory: decky
         run: |
           declared=$(node -p "require('./package.json').version")
-          [ "$GITHUB_REF_NAME" = "decky-v$declared" ] || { echo "tag $GITHUB_REF_NAME does not match package.json version $declared"; exit 1; }
+          [ "$TAG" = "decky-v$declared" ] || { echo "tag $TAG does not match package.json version $declared"; exit 1; }
           python test/test_cartridges.py
           pnpm install --frozen-lockfile
           pnpm run typecheck
@@ -93,4 +112,4 @@ jobs:
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" "${{ steps.package.outputs.file }}" --title "$GITHUB_REF_NAME" --generate-notes
+        run: gh release create "$TAG" "${{ steps.package.outputs.file }}" --title "$TAG" --generate-notes
