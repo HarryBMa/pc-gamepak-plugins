@@ -19,16 +19,15 @@ Each folder's README has the details.
 
 ## Steam Deck
 
-The full set, as used on a Deck:
-
-1. **PC GamePak** for Decky (this repo's `decky/`).
-2. [**Deck Shelves**](https://github.com/santojon/Deck-Shelves), which shows
-   the cartridge in the slot as a shelf on the home screen.
-3. **Add Non Steam Games**, so the games a cartridge carries get a Steam
-   shortcut Deck Shelves can show.
-
-A script to add the Non-Steam Games shortcut to Deck Shelves automatically is
-in progress.
+1. Install **PC GamePak** for Decky from its release zip: Decky's settings →
+   Developer → *Install plugin from ZIP*.
+2. Install [**Deck Shelves**](https://github.com/santojon/Deck-Shelves), add a
+   shelf, and pick **PC GamePak cartridge** as its source. The cartridge in the
+   slot shows on the home screen.
+3. For cartridges that carry the game itself rather than a Steam game, turn on
+   **Add carried games to Steam** in PC GamePak's Quick Access panel. It adds a
+   Steam shortcut for each, with Proton set, shows them on the shelf, and
+   removes them when the cartridge comes out. No other plugin is needed.
 
 ## Turning one on
 
